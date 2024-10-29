@@ -1,3 +1,7 @@
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+
 const https = require('https');
 
 export async function getLinkedInProfile(linkedinUrl) {
@@ -9,7 +13,7 @@ export async function getLinkedInProfile(linkedinUrl) {
     port: null,
     path: `/get-profile-data-by-url?url=${encodedUrl}`,
     headers: {
-      'x-rapidapi-key': '',
+      'x-rapidapi-key': `${process.env.RAPID_KEY}`,
       'x-rapidapi-host': 'linkedin-api8.p.rapidapi.com'
     }
   };

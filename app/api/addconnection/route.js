@@ -1,13 +1,12 @@
-import { scanQR } from "@/app/_lib/qr/scanqr";
+import { NextResponse } from "next/server";
+import { getLinkedInProfile } from "@/app/_lib/linkedin/getconnection";
 
-export async function POST(request) {
+export async function GET(request) {
   try {
-    const { image } = await request.json();
-    const link = await scanQR(image);
-    console.log(link);
-    return new Response(JSON.stringify({ link }), { status: 200 });
+    const data=await getLinkedInProfile("https://www.linkedin.com/in/ethan-prendergast/");
+    return NextResponse.json({data}, {status:200});
   } catch (err) {
     console.error("Error processing QR code:", err);
-    return new Response(JSON.stringify({ error: "Error processing QR code" }), { status: 500 });
+    return new NextResponse.json({ error: "Error processing QR code" }, { status: 500 });
   }
 }
