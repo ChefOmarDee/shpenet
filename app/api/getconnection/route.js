@@ -18,7 +18,7 @@ export const GET = withApiAuthRequired(async function getReminders(req) {
         // Build query based on status
         const query = {
             UID: userID,
-            reminded: status !== 'inactive'
+            reminded: status === 'inactive'
         };
         
         // Get total count for pagination
