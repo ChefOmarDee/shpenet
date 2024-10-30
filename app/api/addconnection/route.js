@@ -1,22 +1,13 @@
 // import { NextResponse } from "next/server";
 import { getLinkedInProfile } from "@/app/_lib/linkedin/getconnection";
-
-// export async function GET(request) {
-//   try {
-//     const data=await getLinkedInProfile("https://www.linkedin.com/in/ethan-prendergast/");
-//     return NextResponse.json({data}, {status:200});
-//   } catch (err) {
-//     console.error("Error processing QR code:", err);
-//     return new NextResponse.json({ error: "Error processing QR code" }, { status: 500 });
-//   }
-// }
-
-// app/api/reminders/route.js
 import { NextResponse } from "next/server";
-
-export async function POST(request) {
+import { withApiAuthRequired, getSession } from "@auth0/nextjs-auth0";
+export const POST = withApiAuthRequired(async function addconnection(req) {
+  const session = await getSession(req);
+  const userID = await session.user.sub
+  const userEmail = await session.user.email
   try {
-    const { qrCode, hours } = await request.json();
+    const { qrCode, hours } = await req.json();
 
     // Validate the input
     if (!qrCode || !hours || Number(hours) % 1 !== 0) {
@@ -26,7 +17,7 @@ export async function POST(request) {
       );
     }
     const cleanUrl = qrCode.split('?')[0];
-    const data=await getLinkedInProfile(cleanUrl);
+    const data=await getLinkedInProfile(cleanUrl, hours, userID, userEmail);
     console.log(data);
     return NextResponse.json(
       { 
@@ -42,4 +33,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-}
+});

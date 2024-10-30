@@ -4,16 +4,16 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const https = require('https');
 
-export async function getLinkedInProfile(linkedinUrl) {
+export async function getLinkedInProfile(linkedinUrl, hoursUntilRemind, UID, email) {
   const encodedUrl = encodeURIComponent(linkedinUrl);
-  
+
   const options = {
     method: 'GET',
     hostname: 'linkedin-api8.p.rapidapi.com',
     port: null,
     path: `/get-profile-data-by-url?url=${encodedUrl}`,
     headers: {
-      'x-rapidapi-key': `${process.env.RAPID_KEY}`,
+      'x-rapidapi-key': process.env.RAPID_KEY,
       'x-rapidapi-host': 'linkedin-api8.p.rapidapi.com'
     }
   };
@@ -30,7 +30,8 @@ export async function getLinkedInProfile(linkedinUrl) {
         try {
           const body = Buffer.concat(chunks);
           const data = JSON.parse(body.toString());
-          resolve(data);
+          const cleanData = parseLinkedInProfile(data, hoursUntilRemind, UID, email)
+          resolve(cleanData);
         } catch (error) {
           reject(new Error('Failed to parse response data'));
         }
@@ -41,7 +42,6 @@ export async function getLinkedInProfile(linkedinUrl) {
       reject(new Error(`Request failed: ${error.message}`));
     });
 
-    // Set a timeout of 10 seconds
     req.setTimeout(10000, () => {
       req.destroy();
       reject(new Error('Request timed out'));
@@ -51,3 +51,40 @@ export async function getLinkedInProfile(linkedinUrl) {
   });
 }
 
+
+function parseLinkedInProfile(data, hoursUntilRemind, UID, email) {
+  try {
+    // Basic fields
+    const profilePicture = data.profilePicture || '';
+    const firstName = data.firstName || '';
+    const lastName = data.lastName || '';
+
+    // Primary position details (first position in the array)
+    const primaryPosition = data.position?.[0] || {};
+    const position = primaryPosition.title || '';
+    const companyName = primaryPosition.companyName || '';
+    const companyURL = primaryPosition.companyURL || '';
+
+    // Set remindTime to current time + 1 hour as an example
+    const remindTime = new Date();
+    remindTime.setHours(remindTime.getHours() + hoursUntilRemind);
+    
+    // Default reminded to false
+    const reminded = false;
+
+    return {
+      UID,
+      email,
+      profilePicture,
+      firstName,
+      lastName,
+      position,
+      companyName,
+      companyURL,
+      remindTime,
+      reminded,
+    };
+  } catch (error) {
+    throw new Error('Error parsing LinkedIn profile data');
+  }
+}
