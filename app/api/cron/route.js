@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
+//cron
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
