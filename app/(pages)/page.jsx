@@ -37,7 +37,6 @@ const TabTrigger = ({ isActive, onClick, children }) => (
 const TabContent = ({ isActive, children }) => (
   <div className={`${isActive ? "block" : "hidden"}`}>{children}</div>
 );
-
 const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
   <div className="overflow-x-auto">
     <Link href="/addconnection" passHref>
@@ -77,14 +76,41 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
             className="border-b border-black hover:bg-lightteal-700/50 transition-colors"
           >
             <td className="p-2 border-r border-black text-center">
-              <img
-                src={reminder.profilePicture}
-                alt={`${reminder.firstName} ${reminder.lastName}`}
-                className="w-8 h-8 rounded-full mx-auto"
-              />
+              {reminder.linkedinUrl ? (
+                <a
+                  href={reminder.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={reminder.profilePicture}
+                    alt={`${reminder.firstName} ${reminder.lastName}`}
+                    className="w-8 h-8 rounded-full mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                </a>
+              ) : (
+                <img
+                  src={reminder.profilePicture}
+                  alt={`${reminder.firstName} ${reminder.lastName}`}
+                  className="w-8 h-8 rounded-full mx-auto"
+                />
+              )}
             </td>
-            <td className="p-2 border-r border-black text-center text-white">
-              {reminder.firstName} {reminder.lastName}
+            <td className="p-2 border-r border-black text-center">
+              {reminder.linkedinUrl ? (
+                <a
+                  href={reminder.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-orange-300 transition-colors"
+                >
+                  {reminder.firstName} {reminder.lastName}
+                </a>
+              ) : (
+                <span className="text-white">
+                  {reminder.firstName} {reminder.lastName}
+                </span>
+              )}
             </td>
             <td className="p-2 border-r border-black hidden md:table-cell text-center text-gray-300">
               {reminder.position}

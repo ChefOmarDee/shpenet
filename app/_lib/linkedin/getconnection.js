@@ -30,7 +30,7 @@ export async function getLinkedInProfile(linkedinUrl, hoursUntilRemind, UID, ema
         try {
           const body = Buffer.concat(chunks);
           const data = JSON.parse(body.toString());
-          const cleanData = parseLinkedInProfile(data, hoursUntilRemind, UID, email)
+          const cleanData = parseLinkedInProfile(data, hoursUntilRemind, UID, email, linkedinUrl)
           resolve(cleanData);
         } catch (error) {
           reject(new Error('Failed to parse response data'));
@@ -52,7 +52,7 @@ export async function getLinkedInProfile(linkedinUrl, hoursUntilRemind, UID, ema
 }
 
 
-function parseLinkedInProfile(data, hoursUntilRemind, UID, email) {
+function parseLinkedInProfile(data, hoursUntilRemind, UID, email, linkedinUrl) {
   try {
     // Basic fields
     const profilePicture = data.profilePicture || '';
@@ -83,6 +83,7 @@ function parseLinkedInProfile(data, hoursUntilRemind, UID, email) {
       companyURL,
       remindTime,
       reminded,
+      linkedinUrl
     };
   } catch (error) {
     throw new Error('Error parsing LinkedIn profile data');

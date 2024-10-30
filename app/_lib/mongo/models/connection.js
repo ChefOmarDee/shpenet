@@ -15,6 +15,10 @@ const connectionSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    linkedinUrl: {
+      type: String,
+      required: false,
+    },
     firstName: {
       type: String,
       required: true,
