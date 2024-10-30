@@ -2,7 +2,6 @@
 import { getLinkedInProfile } from "@/app/_lib/linkedin/getconnection";
 import { NextResponse } from "next/server";
 import { addNewConnection } from "@/app/_lib/mongo/utils/addConnection";
-import { deleteConnection } from "@/app/_lib/mongo/utils/deleteConnection";
 import { withApiAuthRequired, getSession } from "@auth0/nextjs-auth0";
 export const POST = withApiAuthRequired(async function addconnection(req) {
   const session = await getSession(req);

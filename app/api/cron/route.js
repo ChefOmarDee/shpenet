@@ -1,17 +1,12 @@
-import { NextResponse } from "next/server";
-import { Connection } from "@/app/_lib/mongo/models/connection";
+
+import { NextRequest, NextResponse } from "next/server";
+import { Connection } from "@/app/_lib/mongo/models/connection"; // Adjust the import path as needed
 import nodemailer from 'nodemailer';
 import { connectToDatabase } from "@/app/_lib/mongo/connection/connection";
-import * as path from 'path';
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from "path"
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
-// Validate required environment variables
-const requiredEnvVars = ['EMAIL_PASSWORD', 'CRON_SECRET'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
 
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -22,9 +17,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Function to create email content
-function createEmailContent(connection) {
-  return {
+
+// Function to send reminder email
+async function sendReminderEmail(connection) {
+  const mailOptions = {
     from: "shpenetuserhelp@gmail.com",
     to: connection.email,
     subject: `Reminder: Connection with ${connection.firstName} ${connection.lastName}`,
@@ -35,126 +31,106 @@ function createEmailContent(connection) {
         <li><strong>Name:</strong> ${connection.firstName} ${connection.lastName}</li>
         <li><strong>Position:</strong> ${connection.position}</li>
         <li><strong>Company:</strong> ${connection.companyName}</li>
-        ${connection.companyURL ? `<li><strong>Company URL:</strong> <a href="${connection.companyURL}">${connection.companyURL}</a></li>` : ''}
+        <li><strong>Company URL:</strong> <a href="${connection.companyURL}">${connection.companyURL}</a></li>
       </ul>
       <p>Best regards,<br>Your Networking Assistant</p>
     `
   };
-}
 
-// Function to send reminder email with retry logic
-async function sendReminderEmail(connection, maxRetries = 3) {
-  const mailOptions = createEmailContent(connection);
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log(`✓ Reminder email sent to ${connection.email} (attempt ${attempt})`);
-      return true;
-    } catch (error) {
-      console.error(`× Email sending failed (attempt ${attempt}/${maxRetries}):`, error.message);
-      if (attempt === maxRetries) {
-        return false;
-      }
-      // Wait before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-    }
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Reminder email sent to ${connection.email}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return false;
   }
 }
 
-// Process reminders function with batch processing
-async function processReminders(batchSize = 50) {
-  let processed = 0;
-  let failed = 0;
-  
+
+// Process reminders function
+async function processReminders() {
   try {
     // Find all documents where remindTime is in the past and reminded is false
     const connectionsToRemind = await Connection.find({
       remindTime: { $lte: new Date() },
       reminded: false
-    }).limit(batchSize);
+    });
 
-    console.log(`Found ${connectionsToRemind.length} connections to process`);
 
-    // Process connections in parallel with rate limiting
-    const results = await Promise.all(
-      connectionsToRemind.map(async (connection) => {
-        try {
-          const emailSent = await sendReminderEmail(connection);
-          
-          if (emailSent) {
-            await Connection.findByIdAndUpdate(connection._id, {
-              reminded: true,
-              remindTime: null,
-              lastReminderSent: new Date()
-            });
-            processed++;
-            return { success: true, email: connection.email };
-          } else {
-            failed++;
-            return { success: false, email: connection.email };
-          }
-        } catch (error) {
-          failed++;
-          console.error(`Error processing ${connection.email}:`, error.message);
-          return { success: false, email: connection.email, error: error.message };
+    console.log(`Found ${connectionsToRemind.length} connections to remind`);
+
+
+    // Process each connection
+    for (const connection of connectionsToRemind) {
+      try {
+        // Send email
+        const emailSent = await sendReminderEmail(connection);
+       
+        if (emailSent) {
+          // Update reminded status
+          // await Connection.findByIdAndUpdate(connection._id, {
+          //   reminded: true,
+          //   remindTime:null
+          // });
+         
+         
+          console.log(`Successfully processed reminder for ${connection.email} with ID: ${connection._id}`);
+        } else {
+         
         }
-      })
-    );
+      } catch (error) {
+        console.error(`Error processing reminder for ${connection.email}:`, error);
+        continue;
+      }
+    }
 
-    return { processed, failed, results };
+
   } catch (error) {
     console.error('Error in processReminders:', error);
     throw error;
   }
 }
 
-// API Route Handler
+
 export async function GET(request) {
   // Verify the cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
+    return new Response("Unauthorized", {
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
     });
   }
+
 
   try {
     // Connect to MongoDB
     await connectToDatabase();
 
-    const startTime = new Date();
-    console.log("📧 Reminder Cron Job Started:", startTime.toISOString());
-    
+
+    console.log("Cron Job Started at:", new Date());
+   
     // Process reminders
-    const results = await processReminders();
-    
-    const endTime = new Date();
-    console.log("✓ Reminder Cron Job Completed:", endTime.toISOString());
+    await processReminders();
+   
+    console.log("Cron Job Completed at:", new Date());
+
 
     // Return detailed results
     return NextResponse.json({
-      success: true,
       message: "Cron Job Completed",
-      startTime,
-      endTime,
-      duration: endTime - startTime,
-      stats: {
-        processed: results.processed,
-        failed: results.failed
-      },
-      results: results.results
+      timestamp: new Date()
     });
 
+
   } catch (error) {
-    console.error("❌ Cron Job Error:", error);
+    console.error("Cron Job Error:", error);
     return NextResponse.json(
-      { 
-        success: false,
-        error: "Internal Server Error", 
-        message: error.message 
-      }, 
+      {
+        error: "Internal Server Error",
+        message: error.message
+      },
       { status: 500 }
     );
   }

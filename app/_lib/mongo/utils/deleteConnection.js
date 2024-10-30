@@ -1,5 +1,5 @@
 // services/deleteConnection.js
-import { connectToDatabase } from '../connection/connection';
+import { connectToDatabase } from "../connection/connection";
 import { Connection } from '../models/connection';
 
 export async function deleteConnection(documentID, userID) {
