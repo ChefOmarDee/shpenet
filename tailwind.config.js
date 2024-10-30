@@ -10,6 +10,18 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        navy: {
+          600: '#163a5e',
+          800: '#092542',
+          900: '#083766',
+        },
+        lightteal: {
+          500: '#72A9BE', // Make sure to use strings for hex values
+          800: '#1870b8'
+        },
+      },
+      scale: {
+        '102': '1.02',
       },
     },
   },

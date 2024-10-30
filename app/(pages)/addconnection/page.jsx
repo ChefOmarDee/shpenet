@@ -232,14 +232,14 @@ const QRCodeScanner = () => {
       <div className="flex gap-2">
         <button
           onClick={isScanning ? stopScanning : startScanning}
-          className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
         >
           {isScanning ? "Stop Scanning" : "Start Scanning"}
         </button>
         {cameras.length > 1 && (
           <button
             onClick={switchCamera}
-            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="p-2 bg-navy-800 text-orange-400 rounded-lg hover:bg-navy-700 transition-colors border border-orange-500/30"
             title="Switch Camera"
           >
             <SwitchCamera className="w-6 h-6" />
@@ -261,20 +261,20 @@ const QRCodeScanner = () => {
 
     return (
       <div className="space-y-4">
-        <div className="p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium mb-2">Scanned Result:</h3>
+        <div className="p-4 bg-lightteal-500 rounded-lg border border-orange-600/30">
+          <h3 className="font-medium mb-2 text-white">Scanned Result:</h3>
           <div className="flex items-center gap-2">
             {result.startsWith("http") ? (
               <a
                 href={result}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 font-medium"
+                className="inline-flex items-center gap-2 text-white hover:text-orange-300 font-medium transition-colors"
               >
                 Go to link <ExternalLink className="w-4 h-4" />
               </a>
             ) : (
-              <p className="break-all">{result}</p>
+              <p className="break-all text-gray-300">{result}</p>
             )}
           </div>
           <button
@@ -282,7 +282,7 @@ const QRCodeScanner = () => {
               navigator.clipboard.writeText(result);
               alert("Copied to clipboard!");
             }}
-            className="mt-2 text-sm text-blue-500 hover:text-blue-600"
+            className="mt-2 text-sm text-white hover:text-orange-300 transition-colors"
           >
             Copy to clipboard
           </button>
@@ -291,7 +291,7 @@ const QRCodeScanner = () => {
         {showHoursInput ? (
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor="hours" className="font-medium">
+              <label htmlFor="hours" className="font-medium text-white">
                 Set reminder in how many hours?
               </label>
               <input
@@ -301,7 +301,7 @@ const QRCodeScanner = () => {
                 onChange={(e) => setHours(e.target.value)}
                 min="1"
                 step="1"
-                className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-lightteal-500 border border-orange-600/30 rounded-lg px-4 py-2 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="Enter whole number of hours"
                 disabled={isSubmitting}
               />
@@ -309,7 +309,7 @@ const QRCodeScanner = () => {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
+              className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors disabled:bg-orange-400/50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Setting reminder..." : "Submit"}
             </button>
@@ -320,7 +320,7 @@ const QRCodeScanner = () => {
               setResult("");
               startScanning();
             }}
-            className="w-full border border-blue-500 text-blue-500 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors"
+            className="w-full border border-orange-500 text-orange-400 py-2 px-4 rounded-lg hover:bg-navy-800/50 transition-colors"
           >
             Scan Another Code
           </button>
@@ -330,66 +330,70 @@ const QRCodeScanner = () => {
   }, [result, startScanning, showHoursInput, hours, isSubmitting]);
 
   useEffect(() => {
+    getCameras();
     return () => {
       stopScanning();
     };
-  }, [stopScanning]);
+  }, [getCameras, stopScanning]);
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Camera className="w-6 h-6" />
-            <h2 className="text-xl font-bold">
-              {showHoursInput
-                ? "Input Hours Until Reminder"
-                : "QR Code Scanner"}
-            </h2>
+    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
+        <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Camera className="w-6 h-6 text-orange-500" />
+                <h2 className="text-xl font-bold text-orange-500">
+                  {showHoursInput
+                    ? "Input Hours Until Reminder"
+                    : "QR Code Scanner"}
+                </h2>
+              </div>
+              {currentCamera && !showHoursInput && (
+                <p className="text-sm text-orange-400">
+                  Using: {currentCamera.label.split("(")[0].trim()}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {!showHoursInput && (
+                <div className="relative aspect-video bg-lightteal-800 rounded-lg overflow-hidden border border-orange-600/30">
+                  <video
+                    ref={videoRef}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                  {!isScanning && !result && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-navy-900/50">
+                      <p className="text-orange-400">
+                        Camera preview will appear here
+                      </p>
+                    </div>
+                  )}
+                  {isScanning && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-48 h-48 border-2 border-orange-500 rounded-lg"></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {CameraControls}
+
+              {error && (
+                <div className="p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700">
+                  <p>{error}</p>
+                </div>
+              )}
+
+              {ResultDisplay}
+            </div>
           </div>
-          {currentCamera && !showHoursInput && (
-            <p className="text-sm text-gray-500">
-              Using: {currentCamera.label.split("(")[0].trim()}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          {/* Rest of the component remains the same */}
-          {!showHoursInput && (
-            <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay
-                playsInline
-                muted
-              />
-              <canvas ref={canvasRef} className="hidden" />
-              {!isScanning && !result && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <p className="text-gray-500">
-                    Camera preview will appear here
-                  </p>
-                </div>
-              )}
-              {isScanning && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-48 h-48 border-2 border-blue-500 rounded-lg"></div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {CameraControls}
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600">{error}</p>
-            </div>
-          )}
-
-          {ResultDisplay}
         </div>
       </div>
     </div>
