@@ -347,7 +347,7 @@ const QRCodeScanner = () => {
                 <h2 className="text-xl font-bold text-orange-500">
                   {showHoursInput
                     ? "Input Hours Until Reminder"
-                    : "QR Code Scanner"}
+                    : "Linkedin QR Scanner"}
                 </h2>
               </div>
               {currentCamera && !showHoursInput && (
