@@ -6,6 +6,8 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import { useRouter } from "next/navigation";
+
 import { Camera, SwitchCamera, ExternalLink } from "lucide-react";
 import jsQR from "jsqr";
 
@@ -17,12 +19,14 @@ const QRCodeScanner = () => {
   const [currentCamera, setCurrentCamera] = useState(null);
   const [hours, setHours] = useState("");
   const [showHoursInput, setShowHoursInput] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const processingRef = useRef(false);
   const frameCountRef = useRef(0);
+  const router = useRouter();
 
   // Get available cameras
   const getCameras = useCallback(async () => {
@@ -177,16 +181,48 @@ const QRCodeScanner = () => {
       }, 100);
     }
   }, [cameras, currentCamera, isScanning, stopScanning, startScanning]);
-
-  const handleSubmit = () => {
-    // Handle the submission with both the QR code result and hours
-    if (!hours || Number(hours) % 1 != 0) {
+  const handleSubmit = async () => {
+    if (!hours || Number(hours) % 1 !== 0) {
       alert("Please enter a valid number of hours");
       return;
     }
-    console.log("QR Code:", result);
-    console.log("Hours:", parseInt(hours));
-    // Add your submission logic here
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("/api/addconnection", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          qrCode: result,
+          hours: parseInt(hours),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to set reminder");
+      }
+
+      // Success handling
+      router.push("/");
+
+      alert("Reminder set successfully!");
+      // Reset the form
+      setResult("");
+      setHours("");
+      setShowHoursInput(false);
+      setTimeout(() => {
+        router.push("/"); // Redirect to the home page
+      }, 2000);
+    } catch (error) {
+      console.error("Error setting reminder:", error);
+      alert("Failed to set reminder. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const CameraControls = useMemo(() => {
@@ -267,13 +303,15 @@ const QRCodeScanner = () => {
                 step="1"
                 className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter whole number of hours"
+                disabled={isSubmitting}
               />
             </div>
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={isSubmitting}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
             >
-              Submit
+              {isSubmitting ? "Setting reminder..." : "Submit"}
             </button>
           </div>
         ) : (
@@ -289,22 +327,27 @@ const QRCodeScanner = () => {
         )}
       </div>
     );
-  }, [result, startScanning, showHoursInput, hours]);
+  }, [result, startScanning, showHoursInput, hours, isSubmitting]);
 
   useEffect(() => {
     return () => {
       stopScanning();
     };
   }, [stopScanning]);
+
   return (
     <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Camera className="w-6 h-6" />
-            <h2 className="text-xl font-bold">QR Code Scanner</h2>
+            <h2 className="text-xl font-bold">
+              {showHoursInput
+                ? "Input Hours Until Reminder"
+                : "QR Code Scanner"}
+            </h2>
           </div>
-          {currentCamera && (
+          {currentCamera && !showHoursInput && (
             <p className="text-sm text-gray-500">
               Using: {currentCamera.label.split("(")[0].trim()}
             </p>
@@ -312,6 +355,7 @@ const QRCodeScanner = () => {
         </div>
 
         <div className="space-y-4">
+          {/* Rest of the component remains the same */}
           {!showHoursInput && (
             <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
               <video
