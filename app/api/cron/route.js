@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Connection } from "@/app/_lib/mongo/models/connection";"; // Adjust the import path as needed
+import { Connection } from "@/app/_lib/mongo/models/connection";
 import nodemailer from 'nodemailer';
 import { connectToDatabase } from "@/app/_lib/mongo/connection/connection";
 import dotenv from 'dotenv';
