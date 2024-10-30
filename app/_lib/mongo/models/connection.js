@@ -60,4 +60,4 @@ connectionSchema.index({ reminded: 1, UID: 1 });
 // Optional index on remindTime for time-based queries in the cron job
 connectionSchema.index({ remindTime: 1 });
 
-export const Connection = mongoose.models.Connection || mongoose.model("User", connectionSchema);
+export const Connection = mongoose.models.Connection || mongoose.model("Connection", connectionSchema);
