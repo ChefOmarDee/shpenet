@@ -463,5 +463,5 @@ const QRCodeScanner = () => {
     </div>
   );
 };
-//
+//added stuff
 export default QRCodeScanner;

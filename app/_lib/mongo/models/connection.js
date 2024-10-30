@@ -40,7 +40,7 @@ const connectionSchema = new mongoose.Schema(
       required: true,
       default: () => {
         const currentTime = new Date();
-        currentTime.setHours(currentTime.getHours() + 1); // Example: remindTime = current time + 1 hour
+        currentTime.setHours(currentTime.getHours());
         return currentTime;
       },
     },
