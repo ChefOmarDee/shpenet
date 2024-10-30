@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from "";
 import path from "path";
 import mongoose from "mongoose";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
