@@ -2,6 +2,7 @@
 import { getLinkedInProfile } from "@/app/_lib/linkedin/getconnection";
 import { NextResponse } from "next/server";
 import { addNewConnection } from "@/app/_lib/mongo/utils/addConnection";
+import { deleteConnection } from "@/app/_lib/mongo/utils/deleteConnection";
 import { withApiAuthRequired, getSession } from "@auth0/nextjs-auth0";
 export const POST = withApiAuthRequired(async function addconnection(req) {
   const session = await getSession(req);
@@ -22,6 +23,8 @@ export const POST = withApiAuthRequired(async function addconnection(req) {
     console.log(data);
     const newConnection = await addNewConnection(data);
     console.log("New connection added:", newConnection);
+    // const deleteCon = await deleteConnection("6721c42ca7c014288c2690fb", userID)
+    // console.log(deleteCon)
     return NextResponse.json(
       { 
         message: "Reminder set successfully",
