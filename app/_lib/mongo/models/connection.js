@@ -1,60 +1,63 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 
-const projectSchema = new mongoose.Schema(
+const connectionSchema = new mongoose.Schema(
+
   {
-    lat: {
-        type: Number,
-        required: true,
-    },
-    long: {
-        type: Number,
-        required: true,
-    },
-    title: {
+    UID: {
       type: String,
       required: true,
     },
-    desc: {
+    email: {
       type: String,
       required: true,
     },
-    projectId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    uid: {
-      type: String,
-      required: true,
-    },
-    wid: {
+    profilePicture: {
       type: String,
       required: false,
     },
-    cost: {
-        type: mongoose.Decimal128,
-        default: 0,
-    },
-    donated: {
-      type: mongoose.Decimal128,
-      default: 0,
-    },
-    status: {
+    firstName: {
       type: String,
-      enum: ["open", "in progress", "closed"],
       required: true,
     },
-    pictureUrl: {
+    lastName: {
       type: String,
-      default: "",
-    },
-    tag: {
-      type: String,
-      enum: ["environmental", "infrastructure damage", "infrastructure addition"],
       required: true,
+    },
+    position: {
+      type: String,
+      required: true,
+    },
+    companyName: {
+      type: String,
+      required: true,
+    },
+    companyURL: {
+      type: String,
+      required: true,
+    },
+    remindTime: {
+      type: Date,
+      required: true,
+      default: () => {
+        const currentTime = new Date();
+        currentTime.setHours(currentTime.getHours() + 1); // Example: remindTime = current time + 1 hour
+        return currentTime;
+      },
+    },
+    reminded: {
+      type: Boolean,
+      default: false,
     },
   },
-  { collection: "connections" }
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: false },
+  }
 );
 
-export const Project = mongoose.models.Project || mongoose.model("Project", projectSchema);
+// Compound index on reminded and UID for efficient retrieval of unreminded entries by connection
+connectionSchema.index({ reminded: 1, UID: 1 });
+
+// Optional index on remindTime for time-based queries in the cron job
+connectionSchema.index({ remindTime: 1 });
+
+export const Connection = mongoose.models.Connection || mongoose.model("User", connectionSchema);
