@@ -1,6 +1,7 @@
 // import { NextResponse } from "next/server";
 import { getLinkedInProfile } from "@/app/_lib/linkedin/getconnection";
 import { NextResponse } from "next/server";
+import { addNewConnection } from "@/app/_lib/mongo/utils/addConnection";
 import { withApiAuthRequired, getSession } from "@auth0/nextjs-auth0";
 export const POST = withApiAuthRequired(async function addconnection(req) {
   const session = await getSession(req);
@@ -19,6 +20,8 @@ export const POST = withApiAuthRequired(async function addconnection(req) {
     const cleanUrl = qrCode.split('?')[0];
     const data=await getLinkedInProfile(cleanUrl, hours, userID, userEmail);
     console.log(data);
+    const newConnection = await addNewConnection(data);
+    console.log("New connection added:", newConnection);
     return NextResponse.json(
       { 
         message: "Reminder set successfully",
