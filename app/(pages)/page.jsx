@@ -1,9 +1,9 @@
+// Previous imports and components remain the same...
 "use client";
 import React, { useState, useEffect } from "react";
 import { Clock, Building2, UserPlus } from "lucide-react";
 import Link from "next/link";
 
-// Custom Tabs Components remain the same
 const TabsContainer = ({ children, className = "" }) => (
   <div className={`w-full ${className}`}>{children}</div>
 );
@@ -38,9 +38,8 @@ const TabContent = ({ isActive, children }) => (
   <div className={`${isActive ? "block" : "hidden"}`}>{children}</div>
 );
 
-const ReminderTable = ({ reminders, getTimeUntil }) => (
+const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
   <div className="overflow-x-auto">
-    {/* Mobile Create Connection Button */}
     <Link href="/addconnection" passHref>
       <button className="md:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
         <UserPlus className="w-4 h-4" />
@@ -71,7 +70,10 @@ const ReminderTable = ({ reminders, getTimeUntil }) => (
       <tbody>
         {reminders.map((reminder) => (
           <tr
-            key={`${reminder.UID}-${reminder.email}`}
+            key={
+              reminder._id ||
+              `${reminder.UID}-${reminder.email}-${reminder.createdAt}`
+            }
             className="border-b border-black hover:bg-lightteal-700/50 transition-colors"
           >
             <td className="p-2 border-r border-black text-center">
@@ -101,7 +103,7 @@ const ReminderTable = ({ reminders, getTimeUntil }) => (
             <td className="p-2 hidden md:table-cell text-center">
               <div className="flex items-center gap-1 text-gray-300 justify-center">
                 <Clock className="w-4 h-4" />
-                <span>{getTimeUntil(reminder.remindTime)}</span>
+                <span>{getTimeUntil(reminder.remindTime, activeTab)}</span>
               </div>
             </td>
           </tr>
@@ -111,7 +113,6 @@ const ReminderTable = ({ reminders, getTimeUntil }) => (
   </div>
 );
 
-// Rest of the component remains the same
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="flex justify-center gap-2 mt-4">
     <button
@@ -170,17 +171,34 @@ const RemindersDashboard = () => {
     fetchReminders();
   }, [activeTab, currentPage]);
 
-  const getTimeUntil = (remindTime) => {
+  const getTimeUntil = (remindTime, currentTab) => {
     const now = new Date();
     const diff = new Date(remindTime) - now;
 
-    if (diff < 0) return "Past due";
+    if (diff < 0) {
+      // For past due times in active tab
+      if (currentTab === "active") {
+        const hours = Math.abs(Math.floor(diff / (1000 * 60 * 60)));
+        const minutes = Math.abs(
+          Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        );
 
+        if (hours === 0) {
+          return `${minutes} minutes overdue`;
+        }
+        return `${hours} hours overdue`;
+      }
+      return "Past due";
+    }
+
+    // For future times
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (days > 0) return `${days} days`;
-    return `${hours} hours`;
+    if (hours > 0) return `${hours} hours`;
+    return `${minutes} minutes`;
   };
 
   if (error) {
@@ -222,6 +240,7 @@ const RemindersDashboard = () => {
                     <ReminderTable
                       reminders={reminders}
                       getTimeUntil={getTimeUntil}
+                      activeTab={activeTab}
                     />
                     {totalPages > 1 && (
                       <Pagination

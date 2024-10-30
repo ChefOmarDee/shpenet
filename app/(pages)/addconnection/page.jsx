@@ -7,7 +7,6 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-
 import { Camera, SwitchCamera, ExternalLink } from "lucide-react";
 import jsQR from "jsqr";
 
@@ -28,13 +27,59 @@ const QRCodeScanner = () => {
   const frameCountRef = useRef(0);
   const router = useRouter();
 
+  // Error handling utility
+  const handleCameraError = (error) => {
+    console.error("Camera Error:", error);
+    let errorMessage = "Unable to access camera. ";
+
+    if (!navigator.mediaDevices) {
+      errorMessage +=
+        "Your browser doesn't support camera access. Please try using a modern browser.";
+    } else if (
+      error.name === "NotAllowedError" ||
+      error.name === "PermissionDeniedError"
+    ) {
+      errorMessage +=
+        "Camera permission was denied. Please allow camera access and try again.";
+    } else if (
+      error.name === "NotFoundError" ||
+      error.name === "DevicesNotFoundError"
+    ) {
+      errorMessage += "No camera found on your device.";
+    } else if (
+      error.name === "NotReadableError" ||
+      error.name === "TrackStartError"
+    ) {
+      errorMessage += "Camera is already in use by another application.";
+    } else if (error.name === "OverconstrainedError") {
+      errorMessage += "Camera doesn't meet the required constraints.";
+    } else if (error.name === "SecurityError") {
+      errorMessage += "Camera access is restricted due to security settings.";
+    } else {
+      errorMessage += error.message || "An unknown error occurred.";
+    }
+
+    setError(errorMessage);
+  };
+
   // Get available cameras
   const getCameras = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      setError("Your browser doesn't support camera access");
+      return;
+    }
+
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(
         (device) => device.kind === "videoinput"
       );
+
+      if (videoDevices.length === 0) {
+        setError("No cameras found on your device");
+        return;
+      }
+
       setCameras(videoDevices);
 
       // Set default camera to the environment-facing one if available
@@ -45,25 +90,28 @@ const QRCodeScanner = () => {
       );
       setCurrentCamera(backCamera || videoDevices[0]);
     } catch (err) {
-      console.error("Error getting cameras:", err);
-      setError("Error accessing camera list");
+      handleCameraError(err);
     }
   }, []);
 
   // Get constraints based on selected camera
-  const getConstraints = useCallback(
-    () => ({
-      video: {
-        deviceId: currentCamera?.deviceId
-          ? { exact: currentCamera.deviceId }
-          : undefined,
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-        frameRate: { ideal: 15 },
-      },
-    }),
-    [currentCamera]
-  );
+  const getConstraints = useCallback(() => {
+    return {
+      video: currentCamera?.deviceId
+        ? {
+            deviceId: { exact: currentCamera.deviceId },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 15 },
+          }
+        : {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 15 },
+          },
+    };
+  }, [currentCamera]);
 
   // Frame processing logic
   const processFrame = useCallback(() => {
@@ -110,6 +158,7 @@ const QRCodeScanner = () => {
       }
     } catch (err) {
       console.error("Frame processing error:", err);
+      handleCameraError(err);
     } finally {
       processingRef.current = false;
       if (isScanning) {
@@ -118,6 +167,7 @@ const QRCodeScanner = () => {
     }
   }, [isScanning]);
 
+  // Handle frame processing
   useEffect(() => {
     let animationFrameId;
     if (isScanning) {
@@ -130,11 +180,7 @@ const QRCodeScanner = () => {
     };
   }, [isScanning, processFrame]);
 
-  // Initialize camera list on component mount
-  useEffect(() => {
-    getCameras();
-  }, [getCameras]);
-
+  // Start scanning
   const startScanning = useCallback(async () => {
     try {
       setResult("");
@@ -143,6 +189,20 @@ const QRCodeScanner = () => {
       setHours("");
       frameCountRef.current = 0;
 
+      // Check for media devices support
+      if (!navigator.mediaDevices?.getUserMedia) {
+        // Fallback for older browsers
+        const getUserMedia =
+          navigator.getUserMedia ||
+          navigator.webkitGetUserMedia ||
+          navigator.mozGetUserMedia ||
+          navigator.msGetUserMedia;
+
+        if (!getUserMedia) {
+          throw new Error("Your browser doesn't support camera access");
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia(
         getConstraints()
       );
@@ -150,14 +210,21 @@ const QRCodeScanner = () => {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsScanning(true);
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current.play();
+            setIsScanning(true);
+          } catch (err) {
+            handleCameraError(err);
+          }
+        };
       }
     } catch (err) {
-      setError("Error accessing camera: " + err.message);
+      handleCameraError(err);
     }
   }, [getConstraints]);
 
+  // Stop scanning
   const stopScanning = useCallback(() => {
     setIsScanning(false);
     if (streamRef.current) {
@@ -166,6 +233,7 @@ const QRCodeScanner = () => {
     }
   }, []);
 
+  // Switch camera
   const switchCamera = useCallback(async () => {
     const currentIndex = cameras.findIndex(
       (camera) => camera.deviceId === currentCamera?.deviceId
@@ -181,6 +249,8 @@ const QRCodeScanner = () => {
       }, 100);
     }
   }, [cameras, currentCamera, isScanning, stopScanning, startScanning]);
+
+  // Handle form submission
   const handleSubmit = async () => {
     if (!hours || Number(hours) % 1 !== 0) {
       alert("Please enter a valid number of hours");
@@ -206,17 +276,8 @@ const QRCodeScanner = () => {
         throw new Error(data.error || "Failed to set reminder");
       }
 
-      // Success handling
-      router.push("/");
-
       alert("Reminder set successfully!");
-      // Reset the form
-      setResult("");
-      setHours("");
-      setShowHoursInput(false);
-      setTimeout(() => {
-        router.push("/"); // Redirect to the home page
-      }, 2000);
+      router.push("/");
     } catch (error) {
       console.error("Error setting reminder:", error);
       alert("Failed to set reminder. Please try again.");
@@ -225,6 +286,7 @@ const QRCodeScanner = () => {
     }
   };
 
+  // Camera controls component
   const CameraControls = useMemo(() => {
     if (showHoursInput) return null;
 
@@ -256,6 +318,7 @@ const QRCodeScanner = () => {
     showHoursInput,
   ]);
 
+  // Result display component
   const ResultDisplay = useMemo(() => {
     if (!result) return null;
 
@@ -329,6 +392,7 @@ const QRCodeScanner = () => {
     );
   }, [result, startScanning, showHoursInput, hours, isSubmitting]);
 
+  // Initialize component
   useEffect(() => {
     getCameras();
     return () => {
@@ -347,7 +411,7 @@ const QRCodeScanner = () => {
                 <h2 className="text-xl font-bold text-orange-500">
                   {showHoursInput
                     ? "Input Hours Until Reminder"
-                    : "Linkedin QR Scanner"}
+                    : "LinkedIn QR Scanner"}
                 </h2>
               </div>
               {currentCamera && !showHoursInput && (
