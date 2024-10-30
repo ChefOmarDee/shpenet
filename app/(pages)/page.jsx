@@ -1,5 +1,6 @@
-// Previous imports and components remain the same...
 "use client";
+// Import Footer component
+import Footer from "./_comps/footer";
 import React, { useState, useEffect } from "react";
 import { Clock, Building2, UserPlus } from "lucide-react";
 import Link from "next/link";
@@ -39,7 +40,7 @@ const TabContent = ({ isActive, children }) => (
 );
 
 const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
-  <div className="overflow-x-auto">
+  <div>
     <Link href="/addconnection" passHref>
       <button className="md:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
         <UserPlus className="w-4 h-4" />
@@ -56,24 +57,24 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
           <th className="p-2 text-center text-orange-400 border-b border-r border-black">
             Name
           </th>
-          <th className="p-2 text-center hidden md:table-cell text-orange-400 border-b border-r border-black">
+          <th className="p-2 text-center text-orange-400 border-b border-r border-black hidden lg:table-cell">
             Position
           </th>
-          <th className="p-2 text-center text-orange-400 border-b border-r border-black">
+          <th className="p-2 text-center text-orange-400 border-b border-r border-black hidden md:table-cell">
             Company
           </th>
-          <th className="p-2 text-center hidden md:table-cell text-orange-400 border-b border-black">
+          <th className="p-2 text-center text-orange-400 border-b border-r border-black hidden lg:table-cell">
             Time Until
+          </th>
+          <th className="p-2 text-center text-orange-400 border-b border-black">
+            Actions
           </th>
         </tr>
       </thead>
       <tbody>
         {reminders.map((reminder) => (
           <tr
-            key={
-              reminder._id ||
-              `${reminder.UID}-${reminder.email}-${reminder.createdAt}`
-            }
+            key={reminder._id || `${reminder.UID}-${reminder.email}-${reminder.createdAt}`}
             className="border-b border-black hover:bg-lightteal-700/50 transition-colors"
           >
             <td className="p-2 border-r border-black text-center">
@@ -86,10 +87,10 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
             <td className="p-2 border-r border-black text-center text-white">
               {reminder.firstName} {reminder.lastName}
             </td>
-            <td className="p-2 border-r border-black hidden md:table-cell text-center text-gray-300">
+            <td className="p-2 border-r border-black text-center text-gray-300 hidden lg:table-cell">
               {reminder.position}
             </td>
-            <td className="p-2 border-r border-black text-center">
+            <td className="p-2 border-r border-black text-center hidden md:table-cell">
               <a
                 href={reminder.companyURL}
                 target="_blank"
@@ -100,11 +101,18 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
                 <span>{reminder.companyName}</span>
               </a>
             </td>
-            <td className="p-2 hidden md:table-cell text-center">
+            <td className="p-2 text-center border-r border-black hidden lg:table-cell">
               <div className="flex items-center gap-1 text-gray-300 justify-center">
                 <Clock className="w-4 h-4" />
                 <span>{getTimeUntil(reminder.remindTime, activeTab)}</span>
               </div>
+            </td>
+            <td className="p-2 text-center">
+              <Link href={`/details/${reminder._id}`}>
+                <button className="bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition-colors">
+                  View
+                </button>
+              </Link>
             </td>
           </tr>
         ))}
@@ -176,7 +184,6 @@ const RemindersDashboard = () => {
     const diff = new Date(remindTime) - now;
 
     if (diff < 0) {
-      // For past due times in active tab
       if (currentTab === "active") {
         const hours = Math.abs(Math.floor(diff / (1000 * 60 * 60)));
         const minutes = Math.abs(
@@ -191,7 +198,6 @@ const RemindersDashboard = () => {
       return "Past due";
     }
 
-    // For future times
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -206,8 +212,8 @@ const RemindersDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
-      <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
+    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col">
+      <div className="flex flex-col justify-center flex-grow w-full px-4 py-12">
         <div className="w-full max-w-6xl mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
             <TabsContainer>
@@ -256,6 +262,9 @@ const RemindersDashboard = () => {
           </div>
         </div>
       </div>
+      
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 };

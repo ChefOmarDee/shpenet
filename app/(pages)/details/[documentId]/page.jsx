@@ -1,5 +1,6 @@
 "use client";
-
+// Import Footer component
+import Footer from "../../_comps/footer";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Trash2, FileText } from "lucide-react";
@@ -11,21 +12,21 @@ export default function DocumentDetails({ params }) {
   const [loading, setLoading] = useState(true);
   const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 
-  useEffect(() => {
-    async function fetchDocumentData() {
-      try {
-        const response = await fetch(`/api/getdocumentdata?documentId=${documentId}`);
-        if (!response.ok) throw new Error("Failed to fetch document data");
+  async function fetchDocumentData() {
+    try {
+      const response = await fetch(`/api/getdocumentdata?documentId=${documentId}`);
+      if (!response.ok) throw new Error("Failed to fetch document data");
 
-        const data = await response.json();
-        setDocument(data.document);
-      } catch (error) {
-        console.error("Error fetching document data:", error);
-      } finally {
-        setLoading(false);
-      }
+      const data = await response.json();
+      setDocument(data.document);
+    } catch (error) {
+      console.error("Error fetching document data:", error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     fetchDocumentData();
   }, [documentId]);
 
@@ -36,8 +37,11 @@ export default function DocumentDetails({ params }) {
       });
 
       if (!response.ok) throw new Error("Failed to archive document");
+      
       alert("Document archived successfully.");
-      router.refresh();
+      
+      // Re-fetch data to update component state instead of refreshing the page
+      await fetchDocumentData();
     } catch (error) {
       console.error("Error archiving document:", error);
       alert("Error archiving document. Please try again.");
@@ -90,77 +94,79 @@ export default function DocumentDetails({ params }) {
   const timeUntilRemind = calculateTimeUntilRemind(remindTime);
 
   return (
-    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col items-center justify-center p-6">
-      <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-orange-600">
-        
-        {profilePicture && (
-          <img
-            src={profilePicture}
-            alt={`${firstName} ${lastName}'s profile`}
-            className="rounded-full w-44 h-44 mx-auto mb-6 object-cover border-4 border-orange-500"
-          />
-        )}
+    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col">
+      <div className="flex flex-col items-center justify-center flex-grow p-6">
+        <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-orange-600">
+          
+          {profilePicture && (
+            <img
+              src={profilePicture}
+              alt={`${firstName} ${lastName}'s profile`}
+              className="rounded-full w-44 h-44 mx-auto mb-6 object-cover border-4 border-orange-500"
+            />
+          )}
 
-        <h1 className="text-2xl font-semibold text-orange-400">{firstName} {lastName}</h1>
-        <p className="text-lg text-gray-300 mt-2">{position}</p>
+          <h1 className="text-2xl font-semibold text-orange-400">{firstName} {lastName}</h1>
+          <p className="text-lg text-gray-300 mt-2">{position}</p>
 
-        <p className="mt-4 text-gray-300">
-          Works at: 
-          <a 
-            href={companyURL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-orange-400 font-semibold hover:text-orange-300 inline-flex items-center gap-1 transition-colors"
+          <p className="mt-4 text-gray-300">
+            Works at: 
+            <a 
+              href={companyURL} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-orange-400 font-semibold hover:text-orange-300 inline-flex items-center gap-1 transition-colors"
+            >
+              {companyName}
+            </a>
+          </p>
+
+          {createdAt && (
+            <p className="mt-4 text-gray-400 text-sm">
+              Created on: {new Date(createdAt).toLocaleString()}
+            </p>
+          )}
+
+          {remindTime && (
+            <p className="mt-2 text-gray-400 text-sm">
+              Reminder in: {timeUntilRemind}
+            </p>
+          )}
+          {reminded && (
+            <p className="mt-2 text-gray-400 text-sm">
+              Reminder in: {timeUntilRemind}
+            </p>
+          )}
+
+          {reminded ? (
+            <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
+          ) : (
+            <p className="mt-2 text-green-500 text-sm">This item is active</p>
+          )}
+        </div>
+
+        {/* Archive and Delete Buttons */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={handleArchive}
+            disabled={reminded}
+            className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${
+              reminded
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-orange-500 text-white hover:bg-orange-600"
+            }`}
           >
-            {companyName}
-          </a>
-        </p>
+            <FileText className="w-5 h-5" />
+            Archive
+          </button>
 
-        {createdAt && (
-          <p className="mt-4 text-gray-400 text-sm">
-            Created on: {new Date(createdAt).toLocaleString()}
-          </p>
-        )}
-
-        {remindTime && (
-          <p className="mt-2 text-gray-400 text-sm">
-            Reminder in: {timeUntilRemind}
-          </p>
-        )}
-        {reminded && (
-          <p className="mt-2 text-gray-400 text-sm">
-            Reminder in: {timeUntilRemind}
-          </p>
-        )}
-
-        {reminded ? (
-          <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
-        ) : (
-          <p className="mt-2 text-green-500 text-sm">This item is active</p>
-        )}
-      </div>
-
-      {/* Archive and Delete Buttons */}
-      <div className="flex justify-center gap-4 mt-6">
-      <button
-          onClick={handleArchive}
-          disabled={reminded}  // Disables button if reminded is true
-          className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${
-            reminded
-              ? "bg-gray-400 text-gray-200 cursor-not-allowed"  // Disabled state styling
-              : "bg-orange-500 text-white hover:bg-orange-600"  // Active state styling
-          }`}
-        >
-          <FileText className="w-5 h-5" />
-          Archive
-        </button>
-
-        <button
-          onClick={() => setShowDeletePrompt(true)}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-        >
-          Delete Connection
-        </button>
+          <button
+            onClick={() => setShowDeletePrompt(true)}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+          >
+            Delete Connection
+          </button>
+        </div>
       </div>
 
       {/* Delete Confirmation Prompt */}
@@ -185,6 +191,9 @@ export default function DocumentDetails({ params }) {
           </div>
         </div>
       )}
+
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 }
