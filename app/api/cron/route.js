@@ -70,10 +70,10 @@ async function processReminders() {
        
         if (emailSent) {
           // Update reminded status
-          // await Connection.findByIdAndUpdate(connection._id, {
-          //   reminded: true,
-          //   remindTime:null
-          // });
+          await Connection.findByIdAndUpdate(connection._id, {
+            reminded: true,
+            remindTime:null
+          });
          
          
           console.log(`Successfully processed reminder for ${connection.email} with ID: ${connection._id}`);
