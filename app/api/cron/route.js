@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { Connection } from "@/app/_lib/mongo/models/connection"; // Adjust the import path as needed
 import nodemailer from 'nodemailer';
