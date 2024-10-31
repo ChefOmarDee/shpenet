@@ -52,7 +52,7 @@ const QRCodeScanner = () => {
   const [cameras, setCameras] = useState([]);
   const [currentCamera, setCurrentCamera] = useState(null);
   const [hours, setHours] = useState("");
-  const [notes, setNotes] = useState(""); // New state for notes
+  const [notes, setNotes] = useState("");
   const [showHoursInput, setShowHoursInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -63,44 +63,13 @@ const QRCodeScanner = () => {
   const processingRef = useRef(false);
   const frameCountRef = useRef(0);
   const router = useRouter();
+
   const handleLogout = () => {
     window.location.href = "/api/auth/logout";
   };
 
   // Error handling utility
-  const handleCameraError = (error) => {
-    console.error("Camera Error:", error);
-    let errorMessage = "Unable to access camera. ";
-
-    if (!navigator.mediaDevices) {
-      errorMessage +=
-        "Your browser doesn't support camera access. Please try using a modern browser.";
-    } else if (
-      error.name === "NotAllowedError" ||
-      error.name === "PermissionDeniedError"
-    ) {
-      errorMessage +=
-        "Camera permission was denied. Please allow camera access and try again.";
-    } else if (
-      error.name === "NotFoundError" ||
-      error.name === "DevicesNotFoundError"
-    ) {
-      errorMessage += "No camera found on your device.";
-    } else if (
-      error.name === "NotReadableError" ||
-      error.name === "TrackStartError"
-    ) {
-      errorMessage += "Camera is already in use by another application.";
-    } else if (error.name === "OverconstrainedError") {
-      errorMessage += "Camera doesn't meet the required constraints.";
-    } else if (error.name === "SecurityError") {
-      errorMessage += "Camera access is restricted due to security settings.";
-    } else {
-      errorMessage += error.message || "An unknown error occurred.";
-    }
-
-    setError(errorMessage);
-  };
+  const handleCameraError = (error) => {};
 
   // Get available cameras
   const getCameras = useCallback(async () => {
@@ -134,32 +103,62 @@ const QRCodeScanner = () => {
     }
   }, []);
 
-  // Get constraints based on selected camera
+  // Enhanced constraints for better video quality
   const getConstraints = useCallback(() => {
     return {
       video: currentCamera?.deviceId
         ? {
             deviceId: { exact: currentCamera.deviceId },
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            frameRate: { ideal: 15 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
+            brightness: { ideal: 100 },
+            contrast: { ideal: 100 },
+            exposureMode: "continuous",
+            focusMode: "continuous",
+            whiteBalanceMode: "continuous",
           }
         : {
             facingMode: { ideal: "environment" },
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            frameRate: { ideal: 15 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
+            brightness: { ideal: 100 },
+            contrast: { ideal: 100 },
+            exposureMode: "continuous",
+            focusMode: "continuous",
+            whiteBalanceMode: "continuous",
           },
     };
   }, [currentCamera]);
 
-  // Frame processing logic
+  // Enhanced image processing
+  const processImage = useCallback((imageData) => {
+    const { data, width, height } = imageData;
+    const newData = new Uint8ClampedArray(data.length);
+
+    // Apply image processing to improve QR code visibility
+    for (let i = 0; i < data.length; i += 4) {
+      // Convert to grayscale with enhanced contrast
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      const adjusted = avg < 128 ? avg * 0.8 : avg * 1.2; // Increase contrast
+
+      newData[i] = adjusted;
+      newData[i + 1] = adjusted;
+      newData[i + 2] = adjusted;
+      newData[i + 3] = 255; // Alpha channel
+    }
+
+    return new ImageData(newData, width, height);
+  }, []);
+
+  // Enhanced frame processing with error recovery
   const processFrame = useCallback(() => {
     if (!isScanning || processingRef.current) return;
     if (!videoRef.current || !canvasRef.current) return;
 
     frameCountRef.current += 1;
-    if (frameCountRef.current % 3 !== 0) {
+    if (frameCountRef.current % 2 !== 0) {
       requestAnimationFrame(processFrame);
       return;
     }
@@ -174,22 +173,38 @@ const QRCodeScanner = () => {
       });
 
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = 240;
-        canvas.height = 180;
+        canvas.width = 640;
+        canvas.height = 480;
         context.imageSmoothingEnabled = false;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const imageData = context.getImageData(
+        const rawImageData = context.getImageData(
           0,
           0,
           canvas.width,
           canvas.height
         );
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        });
+        const processedImageData = processImage(rawImageData);
 
-        if (code) {
+        let code = null;
+        const attempts = [
+          { inversionAttempts: "dontInvert" },
+          { inversionAttempts: "onlyInvert" },
+          { inversionAttempts: "attemptBoth" },
+        ];
+
+        for (const settings of attempts) {
+          code = jsQR(
+            processedImageData.data,
+            processedImageData.width,
+            processedImageData.height,
+            settings
+          );
+
+          if (code) break;
+        }
+
+        if (code && code.data && code.data.trim().length > 0) {
           setResult(code.data);
           setShowHoursInput(true);
           stopScanning();
@@ -198,14 +213,16 @@ const QRCodeScanner = () => {
       }
     } catch (err) {
       console.error("Frame processing error:", err);
-      handleCameraError(err);
+      if (!error) {
+        handleCameraError(new Error("Processing error - retrying..."));
+      }
     } finally {
       processingRef.current = false;
       if (isScanning) {
         requestAnimationFrame(processFrame);
       }
     }
-  }, [isScanning]);
+  }, [isScanning, processImage, error]);
 
   // Handle frame processing
   useEffect(() => {
@@ -220,7 +237,7 @@ const QRCodeScanner = () => {
     };
   }, [isScanning, processFrame]);
 
-  // Start scanning
+  // Enhanced camera initialization
   const startScanning = useCallback(async () => {
     try {
       setResult("");
@@ -229,35 +246,46 @@ const QRCodeScanner = () => {
       setHours("");
       frameCountRef.current = 0;
 
-      // Check for media devices support
       if (!navigator.mediaDevices?.getUserMedia) {
-        // Fallback for older browsers
-        const getUserMedia =
-          navigator.getUserMedia ||
-          navigator.webkitGetUserMedia ||
-          navigator.mozGetUserMedia ||
-          navigator.msGetUserMedia;
+        throw new Error("Camera access not supported");
+      }
 
-        if (!getUserMedia) {
-          throw new Error("Your browser doesn't support camera access");
-        }
+      // Stop any existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
 
       const stream = await navigator.mediaDevices.getUserMedia(
         getConstraints()
       );
+
+      // Configure track settings for better quality
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        try {
+          await videoTrack.applyConstraints({
+            advanced: [
+              { brightness: 100 },
+              { contrast: 100 },
+              { sharpness: 100 },
+              { saturation: 100 },
+            ],
+          });
+        } catch (e) {
+          console.warn("Could not apply advanced constraints:", e);
+        }
+      }
+
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current.play();
-            setIsScanning(true);
-          } catch (err) {
-            handleCameraError(err);
-          }
-        };
+        await new Promise((resolve) => {
+          videoRef.current.onloadedmetadata = resolve;
+        });
+
+        await videoRef.current.play();
+        setIsScanning(true);
       }
     } catch (err) {
       handleCameraError(err);
@@ -283,7 +311,6 @@ const QRCodeScanner = () => {
 
     if (isScanning) {
       stopScanning();
-      // Short delay to ensure proper cleanup
       setTimeout(() => {
         startScanning();
       }, 100);
@@ -307,7 +334,7 @@ const QRCodeScanner = () => {
         body: JSON.stringify({
           qrCode: result,
           hours: parseInt(hours),
-          notes: notes.trim(), // Include notes, trimmed of whitespace
+          notes: notes.trim(),
         }),
       });
 
