@@ -187,17 +187,19 @@ export default function DocumentDetails({ params }) {
               </a>
             </p>
 
-            {linkedinUrl && (
-              <a
-                href={linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2 transition-colors"
-              >
-                <Linkedin className="w-5 h-5" />
-                LinkedIn Profile
-              </a>
-            )}
+            <div className="flex flex-col items-center">
+              {linkedinUrl && (
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-400 hover:text-orange-300 inline-flex items-center gap-2 transition-colors text-center"
+                >
+                  <Linkedin className="w-5 h-5" />
+                  <span>LinkedIn Profile</span>
+                </a>
+              )}
+            </div>
           </div>
 
           {createdAt && (

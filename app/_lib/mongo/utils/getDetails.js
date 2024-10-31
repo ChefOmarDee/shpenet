@@ -28,7 +28,8 @@ export async function getDetails(documentId, userId) {
       profilePicture: document.profilePicture,
       createdAt: document.createdAt,
       remindTime: document.remindTime,
-      reminded: document.reminded
+      reminded: document.reminded,
+      linkedinUrl: document.linkedinUrl
     };
   } catch (error) {
     console.error("Error in getDetails:", error);
