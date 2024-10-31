@@ -457,25 +457,28 @@ const QRCodeScanner = () => {
     };
   }, [getCameras, stopScanning]);
   return (
-    <div className="flex flex-col min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
-      {/* Home Button */}
-      <button
-        onClick={() => router.push("/")}
-        className="absolute top-4 left-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
-        aria-label="Back to Home"
-      >
-        <Home className="w-6 h-6" />
-      </button>
+    <div className="relative flex flex-col min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      {/* Navigation Container */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
+        {/* Home Button */}
+        <button
+          onClick={() => router.push("/")}
+          className="bg-orange-500 text-white p-2 md:p-3 rounded-full hover:bg-orange-600 transition-colors"
+          aria-label="Back to Home"
+        >
+          <Home className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
 
-      {/* Logout Button */}
-      <button
-        onClick={() => setShowLogoutDialog(true)}
-        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-        aria-label="Logout"
-      >
-        <LogOut className="w-5 h-5" />
-        <span>Logout</span>
-      </button>
+        {/* Logout Button */}
+        <button
+          onClick={() => setShowLogoutDialog(true)}
+          className="bg-orange-500 text-white p-2 md:px-6 md:py-3 rounded-full md:rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+          aria-label="Logout"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="hidden md:inline">Logout</span>
+        </button>
+      </div>
 
       {/* Logout Confirmation Dialog */}
       <LogoutDialog
@@ -484,7 +487,7 @@ const QRCodeScanner = () => {
         onConfirm={handleLogout}
       />
 
-      <div className="flex-grow flex flex-col justify-center items-center w-full px-4 py-12">
+      <div className="flex-grow flex flex-col justify-center items-center w-full px-4 py-12 pt-20">
         <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
