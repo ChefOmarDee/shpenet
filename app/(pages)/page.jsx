@@ -106,7 +106,10 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
       <tbody>
         {reminders.map((reminder) => (
           <tr
-            key={reminder._id || `${reminder.UID}-${reminder.email}-${reminder.createdAt}`}
+            key={
+              reminder._id ||
+              `${reminder.UID}-${reminder.email}-${reminder.createdAt}`
+            }
             className="border-b border-black hover:bg-lightteal-700/50 transition-colors"
           >
             <td className="p-2 border-r border-black text-center">
@@ -277,68 +280,76 @@ const RemindersDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
-      <div className="flex-grow flex flex-col items-center justify-center px-4 py-12 w-full">
-        <button
-          onClick={() => setShowLogoutDialog(true)}
-          className="absolute top-4 right-4 bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2"
-          aria-label="Logout"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="hidden md:inline">Logout</span>
-        </button>
+    <div className="relative flex flex-col min-h-screen bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      {/* Flex container with centered content */}
+      <div className="flex items-center justify-center flex-grow py-20 px-4">
+        <div className="w-full max-w-6xl">
+          {/* Logout button */}
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => setShowLogoutDialog(true)}
+              className="bg-orange-500 text-white p-2 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2"
+              aria-label="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="hidden md:inline">Logout</span>
+            </button>
+          </div>
 
-        <LogoutDialog
-          isOpen={showLogoutDialog}
-          onClose={() => setShowLogoutDialog(false)}
-          onConfirm={handleLogout}
-        />
+          <LogoutDialog
+            isOpen={showLogoutDialog}
+            onClose={() => setShowLogoutDialog(false)}
+            onConfirm={handleLogout}
+          />
 
-        <div className="w-full max-w-6xl mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
-          <div className="p-6">
-            <TabsContainer>
-              <TabsList>
-                <TabTrigger
-                  isActive={activeTab === "active"}
-                  onClick={() => {
-                    setActiveTab("active");
-                    setCurrentPage(1);
-                  }}
-                >
-                  Active Reminders
-                </TabTrigger>
-                <TabTrigger
-                  isActive={activeTab === "inactive"}
-                  onClick={() => {
-                    setActiveTab("inactive");
-                    setCurrentPage(1);
-                  }}
-                >
-                  Inactive Reminders
-                </TabTrigger>
-              </TabsList>
+          <div className="rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
+            <div className="p-4 sm:p-6">
+              <TabsContainer>
+                <TabsList>
+                  <TabTrigger
+                    isActive={activeTab === "active"}
+                    onClick={() => {
+                      setActiveTab("active");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Active Reminders
+                  </TabTrigger>
+                  <TabTrigger
+                    isActive={activeTab === "inactive"}
+                    onClick={() => {
+                      setActiveTab("inactive");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    Inactive Reminders
+                  </TabTrigger>
+                </TabsList>
 
-              <TabContent isActive={true}>
-                {isLoading ? (
-                  <div className="text-center p-8">Loading reminders...</div>
-                ) : (
-                  <>
-                    <ReminderTable
-                      reminders={reminders}
-                      getTimeUntil={getTimeUntil}
-                      activeTab={activeTab}
-                    />
-                    {totalPages > 1 && (
-                      <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                      />
-                    )}
-                  </>
-                )}
-              </TabContent>
-            </TabsContainer>
+                <TabContent isActive={true}>
+                  {isLoading ? (
+                    <div className="text-center p-8">Loading reminders...</div>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <ReminderTable
+                          reminders={reminders}
+                          getTimeUntil={getTimeUntil}
+                          activeTab={activeTab}
+                        />
+                      </div>
+                      {totalPages > 1 && (
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={setCurrentPage}
+                        />
+                      )}
+                    </>
+                  )}
+                </TabContent>
+              </TabsContainer>
+            </div>
           </div>
         </div>
       </div>
