@@ -3,7 +3,14 @@
 import Footer from "../../_comps/footer";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Trash2, FileText, Home, Linkedin, LogOut } from "lucide-react";
+import {
+  Trash2,
+  FileText,
+  Home,
+  Linkedin,
+  LogOut,
+  NotebookText,
+} from "lucide-react";
 
 // Logout Dialog Component
 const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
@@ -151,52 +158,57 @@ export default function DocumentDetails({ params }) {
     createdAt,
     remindTime,
     reminded,
+    notes,
   } = document;
   const timeUntilRemind = calculateTimeUntilRemind(remindTime);
 
   return (
     <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col">
-      <div className="flex-grow flex flex-col items-center justify-center p-6">
-        {/* Home Button */}
+      {/* Top Button Container */}
+      <div className="flex justify-between items-center px-4 py-4">
         <button
           onClick={() => router.push("/")}
-          className="absolute top-4 left-4 bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors"
+          className="bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center justify-center"
           aria-label="Back to Home"
         >
           <Home className="w-6 h-6" />
         </button>
 
-        {/* Logout Button */}
         <button
           onClick={() => setShowLogoutDialog(true)}
-          className="absolute top-4 right-4 bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2"
+          className="bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2 justify-center"
           aria-label="Logout"
         >
           <LogOut className="w-5 h-5" />
           <span className="hidden md:inline">Logout</span>
         </button>
+      </div>
 
-        {/* Logout Confirmation Dialog */}
-        <LogoutDialog
-          isOpen={showLogoutDialog}
-          onClose={() => setShowLogoutDialog(false)}
-          onConfirm={handleLogout}
-        />
+      {/* Logout Confirmation Dialog */}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+      />
 
-        <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-orange-600">
+      {/* Document Details Container */}
+      <div className="flex-grow flex flex-col items-center justify-center p-6 space-y-6">
+        <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-6 sm:p-8 max-w-md w-full text-center border border-orange-600">
+          {/* Profile Section */}
           {profilePicture && (
             <img
               src={profilePicture}
               alt={`${firstName} ${lastName}'s profile`}
-              className="rounded-full w-44 h-44 mx-auto mb-6 object-cover border-4 border-orange-500"
+              className="rounded-full w-32 h-32 sm:w-44 sm:h-44 mx-auto mb-4 sm:mb-6 object-cover border-4 border-orange-500"
             />
           )}
 
-          <h1 className="text-2xl font-semibold text-orange-400">
+          <h1 className="text-xl sm:text-2xl font-semibold text-orange-400">
             {firstName} {lastName}
           </h1>
-          <p className="text-lg text-gray-300 mt-2">{position}</p>
+          <p className="text-base sm:text-lg text-gray-300 mt-2">{position}</p>
 
+          {/* Company and LinkedIn Info */}
           <div className="flex flex-col items-center gap-2 mt-4">
             <p className="text-gray-300">
               Works at:&nbsp;
@@ -210,21 +222,20 @@ export default function DocumentDetails({ params }) {
               </a>
             </p>
 
-            <div className="flex flex-col items-center">
-              {linkedinUrl && (
-                <a
-                  href={linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-400 hover:text-orange-300 inline-flex items-center gap-2 transition-colors text-center"
-                >
-                  <Linkedin className="w-5 h-5" />
-                  <span>LinkedIn Profile</span>
-                </a>
-              )}
-            </div>
+            {linkedinUrl && (
+              <a
+                href={linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-400 hover:text-orange-300 inline-flex items-center gap-2 transition-colors text-center"
+              >
+                <Linkedin className="w-5 h-5" />
+                <span>LinkedIn Profile</span>
+              </a>
+            )}
           </div>
 
+          {/* Timestamp and Reminder Info */}
           {createdAt && (
             <p className="mt-4 text-gray-400 text-sm">
               Created on: {new Date(createdAt).toLocaleString()}
@@ -243,6 +254,27 @@ export default function DocumentDetails({ params }) {
             </p>
           ) : (
             <p className="mt-2 text-green-500 text-sm">This item is active</p>
+          )}
+
+          {/* Notes Section */}
+          {notes ? (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <NotebookText className="w-5 h-5 text-orange-400" />
+                <h3 className="text-orange-400 font-semibold">Notes</h3>
+              </div>
+              <p className="text-gray-300 text-sm whitespace-pre-wrap break-words">
+                {notes}
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <NotebookText className="w-5 h-5 text-orange-400" />
+                <h3 className="text-orange-400 font-semibold">Notes</h3>
+              </div>
+              <p className="text-gray-400 text-sm">No notes added</p>
+            </div>
           )}
         </div>
 

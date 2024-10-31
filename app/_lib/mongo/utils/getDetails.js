@@ -3,21 +3,20 @@ import { connectToDatabase } from '../connection/connection';
 import { Connection } from '../models/connection';
 export async function getDetails(documentId, userId) {
   await connectToDatabase();
-
+   
   try {
     // Find the document by its ID
     const document = await Connection.findById(documentId);
-
+     
     // Check if the document exists
     if (!document) {
       throw new Error("Document not found.");
     }
-
+     
     // Authorization check: ensure the user's ID matches the document's UID
     if (document.UID !== userId) {
       throw new Error("Unauthorized: You do not have permission to view this document.");
     }
-
     // Return document data if authorized
     return {
       firstName: document.firstName,
@@ -29,7 +28,8 @@ export async function getDetails(documentId, userId) {
       createdAt: document.createdAt,
       remindTime: document.remindTime,
       reminded: document.reminded,
-      linkedinUrl: document.linkedinUrl
+      linkedinUrl: document.linkedinUrl,
+      notes: document.notes // Add this line to include notes
     };
   } catch (error) {
     console.error("Error in getDetails:", error);
