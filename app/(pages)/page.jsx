@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock, Building2, UserPlus, LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 // Logout Dialog Component
 const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
