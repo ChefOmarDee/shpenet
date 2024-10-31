@@ -4,7 +4,6 @@ import Footer from "./_comps/footer";
 import React, { useState, useEffect } from "react";
 import { Clock, Building2, UserPlus, LogOut } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 // Logout Dialog Component
 const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
@@ -12,10 +11,7 @@ const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* Dialog */}
       <div className="relative z-10 bg-lightteal-800 border border-orange-600 rounded-lg p-6 w-full max-w-md mx-4">
         <h2 className="text-xl font-bold text-white mb-2">Confirm Logout</h2>
         <p className="text-gray-300 mb-6">
@@ -40,7 +36,7 @@ const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
-// Previous component definitions (TabsContainer, TabsList, etc.) remain the same...
+// Additional Component Definitions
 const TabsContainer = ({ children, className = "" }) => (
   <div className={`w-full ${className}`}>{children}</div>
 );
@@ -74,6 +70,7 @@ const TabTrigger = ({ isActive, onClick, children }) => (
 const TabContent = ({ isActive, children }) => (
   <div className={`${isActive ? "block" : "hidden"}`}>{children}</div>
 );
+
 const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
   <div>
     <Link href="/addconnection" passHref>
@@ -183,6 +180,35 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
   </div>
 );
 
+// Function to calculate time until reminder
+const getTimeUntil = (remindTime, currentTab) => {
+  const now = new Date();
+  const diff = new Date(remindTime) - now;
+
+  if (diff < 0) {
+    if (currentTab === "active") {
+      const hours = Math.abs(Math.floor(diff / (1000 * 60 * 60)));
+      const minutes = Math.abs(
+        Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      );
+
+      if (hours === 0) {
+        return `${minutes} minutes overdue`;
+      }
+      return `${hours} hours overdue`;
+    }
+    return "Past due";
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) return `${days} days`;
+  if (hours > 0) return `${hours} hours`;
+  return `${minutes} minutes`;
+};
+
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="flex justify-center gap-2 mt-4">
     <button
@@ -246,58 +272,27 @@ const RemindersDashboard = () => {
     fetchReminders();
   }, [activeTab, currentPage]);
 
-  const getTimeUntil = (remindTime, currentTab) => {
-    const now = new Date();
-    const diff = new Date(remindTime) - now;
-
-    if (diff < 0) {
-      if (currentTab === "active") {
-        const hours = Math.abs(Math.floor(diff / (1000 * 60 * 60)));
-        const minutes = Math.abs(
-          Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        );
-
-        if (hours === 0) {
-          return `${minutes} minutes overdue`;
-        }
-        return `${hours} hours overdue`;
-      }
-      return "Past due";
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (days > 0) return `${days} days`;
-    if (hours > 0) return `${hours} hours`;
-    return `${minutes} minutes`;
-  };
-
   if (error) {
     return <div className="text-center text-red-500 p-8">Error: {error}</div>;
   }
 
   return (
-    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
-      {/* Logout Button */}
-      <button
-        onClick={() => setShowLogoutDialog(true)}
-        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
-        aria-label="Logout"
-      >
-        <LogOut className="w-5 h-5" />
-        <span>Logout</span>
-      </button>
+    <div className="flex flex-col min-h-screen bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      <div className="flex-grow flex flex-col items-center justify-center px-4 py-12 w-full">
+        <button
+          onClick={() => setShowLogoutDialog(true)}
+          className="absolute top-4 right-4 bg-orange-500 text-white p-3 md:px-6 md:py-3 rounded-full hover:bg-orange-600 transition-colors flex items-center gap-2"
+          aria-label="Logout"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="hidden md:inline">Logout</span>
+        </button>
 
-      {/* Logout Confirmation Dialog */}
-      <LogoutDialog
-        isOpen={showLogoutDialog}
-        onClose={() => setShowLogoutDialog(false)}
-        onConfirm={handleLogout}
-      />
-
-      <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
+        <LogoutDialog
+          isOpen={showLogoutDialog}
+          onClose={() => setShowLogoutDialog(false)}
+          onConfirm={handleLogout}
+        />
 
         <div className="w-full max-w-6xl mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
@@ -347,8 +342,6 @@ const RemindersDashboard = () => {
           </div>
         </div>
       </div>
-      
-      {/* Footer Component */}
       <Footer />
     </div>
   );

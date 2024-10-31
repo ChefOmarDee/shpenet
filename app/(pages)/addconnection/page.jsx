@@ -1,5 +1,4 @@
 "use client";
-import Footer from "../_comps/footer";
 import React, {
   useState,
   useRef,
@@ -7,6 +6,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import Footer from "../_comps/footer";
 import { useRouter } from "next/navigation";
 import { Camera, SwitchCamera, ExternalLink, Home, LogOut } from "lucide-react";
 import jsQR from "jsqr";
@@ -439,7 +439,7 @@ const QRCodeScanner = () => {
     };
   }, [getCameras, stopScanning]);
   return (
-    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+    <div className="flex flex-col min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
       {/* Home Button */}
       <button
         onClick={() => router.push("/")}
@@ -448,33 +448,84 @@ const QRCodeScanner = () => {
       >
         <Home className="w-6 h-6" />
       </button>
-
+  
       {/* Logout Button */}
       <button
         onClick={() => setShowLogoutDialog(true)}
-        className="absolute top-4 right-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
+        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
         aria-label="Logout"
       >
-        <LogOut className="w-6 h-6" />
+        <LogOut className="w-5 h-5" />
+        <span>Logout</span>
       </button>
-
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center h-full">
-        <video ref={videoRef} className="w-64 h-48 bg-black rounded-lg" />
-        <canvas ref={canvasRef} className="hidden" />
-
-        {CameraControls}
-        {ResultDisplay}
-      </div>
-
-      {/* Logout Dialog */}
+  
+      {/* Logout Confirmation Dialog */}
       <LogoutDialog
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}
         onConfirm={handleLogout}
       />
-
-      {/* Footer Component */}
+  
+      <div className="flex-grow flex flex-col justify-center items-center w-full px-4 py-12">
+        <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Camera className="w-6 h-6 text-orange-500" />
+                <h2 className="text-xl font-bold text-orange-500">
+                  {showHoursInput
+                    ? "Input Hours Until Reminder"
+                    : "LinkedIn QR Scanner"}
+                </h2>
+              </div>
+              {currentCamera && !showHoursInput && (
+                <p className="text-sm text-orange-400">
+                  Using: {currentCamera.label.split("(")[0].trim()}
+                </p>
+              )}
+            </div>
+  
+            <div className="space-y-4">
+              {!showHoursInput && (
+                <div className="relative aspect-video bg-lightteal-800 rounded-lg overflow-hidden border border-orange-600/30">
+                  <video
+                    ref={videoRef}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                  {!isScanning && !result && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-navy-900/50">
+                      <p className="text-orange-400">
+                        Camera preview will appear here
+                      </p>
+                    </div>
+                  )}
+                  {isScanning && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-48 h-48 border-2 border-orange-500 rounded-lg"></div>
+                    </div>
+                  )}
+                </div>
+              )}
+  
+              {CameraControls}
+  
+              {error && (
+                <div className="p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700">
+                  <p>{error}</p>
+                </div>
+              )}
+  
+              {ResultDisplay}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer */}
       <Footer />
     </div>
   );
