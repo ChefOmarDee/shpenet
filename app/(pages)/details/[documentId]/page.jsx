@@ -1,5 +1,6 @@
 "use client";
-
+// Import Footer component
+import Footer from "../../_comps/footer";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Trash2, FileText, Home, Linkedin, LogOut } from "lucide-react";
@@ -46,23 +47,22 @@ export default function DocumentDetails({ params }) {
   const [showDeletePrompt, setShowDeletePrompt] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  useEffect(() => {
-    async function fetchDocumentData() {
-      try {
-        const response = await fetch(
-          `/api/getdocumentdata?documentId=${documentId}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch document data");
 
-        const data = await response.json();
-        setDocument(data.document);
-      } catch (error) {
-        console.error("Error fetching document data:", error);
-      } finally {
-        setLoading(false);
-      }
+  async function fetchDocumentData() {
+    try {
+      const response = await fetch(`/api/getdocumentdata?documentId=${documentId}`);
+      if (!response.ok) throw new Error("Failed to fetch document data");
+
+      const data = await response.json();
+      setDocument(data.document);
+    } catch (error) {
+      console.error("Error fetching document data:", error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     fetchDocumentData();
   }, [documentId]);
 
@@ -76,8 +76,11 @@ export default function DocumentDetails({ params }) {
       );
 
       if (!response.ok) throw new Error("Failed to archive document");
+      
       alert("Document archived successfully.");
-      router.refresh();
+      
+      // Re-fetch data to update component state instead of refreshing the page
+      await fetchDocumentData();
     } catch (error) {
       console.error("Error archiving document:", error);
       alert("Error archiving document. Please try again.");
@@ -228,25 +231,45 @@ export default function DocumentDetails({ params }) {
           <p className="mt-4 text-gray-400 text-sm">
             Created on: {new Date(createdAt).toLocaleString()}
           </p>
-        )}
 
-        {remindTime && (
-          <p className="mt-2 text-gray-400 text-sm">
-            Reminder in: {timeUntilRemind}
-          </p>
-        )}
-        {reminded && (
-          <p className="mt-2 text-gray-400 text-sm">
-            Reminder in: {timeUntilRemind}
-          </p>
-        )}
+          {createdAt && (
+            <p className="mt-4 text-gray-400 text-sm">
+              Created on: {new Date(createdAt).toLocaleString()}
+            </p>
+          )}
 
-        {reminded ? (
-          <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
-        ) : (
-          <p className="mt-2 text-green-500 text-sm">This item is active</p>
-        )}
-      </div>
+          {remindTime && (
+            <p className="mt-2 text-gray-400 text-sm">
+              Reminder in: {timeUntilRemind}
+            </p>
+          )}
+          {reminded && (
+            <p className="mt-2 text-gray-400 text-sm">
+              Reminder in: {timeUntilRemind}
+            </p>
+          )}
+
+          {reminded ? (
+            <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
+          ) : (
+            <p className="mt-2 text-green-500 text-sm">This item is active</p>
+          )}
+        </div>
+
+        {/* Archive and Delete Buttons */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={handleArchive}
+            disabled={reminded}
+            className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${
+              reminded
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-orange-500 text-white hover:bg-orange-600"
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            Archive
+          </button>
 
       {/* Archive and Delete Buttons */}
       <div className="flex justify-center gap-4 mt-6">
@@ -270,6 +293,7 @@ export default function DocumentDetails({ params }) {
           <Trash2 className="w-5 h-5" />
           Delete Connection
         </button>
+
       </div>
 
       {/* Delete Confirmation Prompt */}
@@ -296,6 +320,9 @@ export default function DocumentDetails({ params }) {
           </div>
         </div>
       )}
+
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import Footer from "../_comps/footer";
 import React, {
   useState,
   useRef,
@@ -465,6 +466,7 @@ const QRCodeScanner = () => {
         onConfirm={handleLogout}
       />
       <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
+
         <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -484,6 +486,7 @@ const QRCodeScanner = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Camera Preview */}
               {!showHoursInput && (
                 <div className="relative aspect-video bg-lightteal-800 rounded-lg overflow-hidden border border-orange-600/30">
                   <video
@@ -509,19 +512,25 @@ const QRCodeScanner = () => {
                 </div>
               )}
 
+              {/* Camera Controls */}
               {CameraControls}
 
+              {/* Error Display */}
               {error && (
                 <div className="p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700">
                   <p>{error}</p>
                 </div>
               )}
 
+              {/* Result Display */}
               {ResultDisplay}
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 };
