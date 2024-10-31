@@ -4,18 +4,34 @@ import { connectToDatabase } from "@/app/_lib/mongo/connection/connection";
 import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 import path from "path";
+import pLimit from 'p-limit';
+
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 // Configure SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Function to send reminder email using SendGrid
+// Create a rate limiter - limit to 5 concurrent operations
+const limit = pLimit(5);
+
+// Implement exponential backoff
+async function withRetry(operation, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10 second delay
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
 async function sendReminderEmail(connection) {
-  // Conditionally add notes section only if notes exist and are not an empty string
   const notesSection = connection.notes ? `<li><strong>Notes:</strong> ${connection.notes}</li>` : '';
 
   const msg = {
-    from: "shpenetuserhelp@gmail.com", // Your verified sender
+    from: "shpenetuserhelp@gmail.com",
     to: connection.email,
     subject: `Reminder: Connection with ${connection.firstName} ${connection.lastName}`,
     html: `
@@ -33,78 +49,104 @@ async function sendReminderEmail(connection) {
     `
   };
 
-  try {
-    await sgMail.send(msg);
-    console.log(`Reminder email sent to ${connection.email}`);
-    return true;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    console.error('SendGrid error details:', error.response?.body);
-    return false;
-  }
-}
-// Process reminders function
-async function processReminders() {
-  try {
-    // Find all documents where remindTime is in the past and reminded is false
-    const connectionsToRemind = await Connection.find({
-      remindTime: { $lte: new Date() },
-      reminded: false
-    });
-
-    console.log(`Found ${connectionsToRemind.length} connections to remind`);
-
-    // Process each connection
-    for (const connection of connectionsToRemind) {
-      try {
-        // Send email
-        const emailSent = await sendReminderEmail(connection);
-        
-        if (emailSent) {
-          // Update reminded status
-          await Connection.findByIdAndUpdate(connection._id, {
-            reminded: true,
-            remindTime: null
-          });
-          
-          console.log(`Successfully processed reminder for ${connection.email} with ID: ${connection._id}`);
+  return withRetry(async () => {
+    try {
+      await sgMail.send(msg);
+      console.log(`Reminder email sent to ${connection.email}`);
+      return true;
+    } catch (error) {
+      if (error.response?.body?.errors) {
+        // Log specific SendGrid errors
+        console.error('SendGrid errors:', error.response.body.errors);
+        // Don't retry for permanent errors
+        if (error.response.body.errors.some(e => e.message.includes('permanently rejected'))) {
+          return false;
         }
-      } catch (error) {
-        console.error(`Error processing reminder for ${connection.email}:`, error);
-        continue;
       }
+      throw error; // Re-throw for retry
+    }
+  });
+}
+
+async function processReminders() {
+  let processedCount = 0;
+  let failedCount = 0;
+
+  try {
+    // Use a batch size to process connections in chunks
+    const batchSize = 50;
+    let skip = 0;
+
+    while (true) {
+      const connectionsToRemind = await Connection.find({
+        remindTime: { $lte: new Date() },
+        reminded: false
+      })
+      .skip(skip)
+      .limit(batchSize)
+      .lean(); // Use lean() for better performance
+
+      if (connectionsToRemind.length === 0) break;
+
+      // Process connections in parallel with rate limiting
+      const results = await Promise.allSettled(
+        connectionsToRemind.map(connection => 
+          limit(async () => {
+            try {
+              const emailSent = await sendReminderEmail(connection);
+              
+              if (emailSent) {
+                await Connection.findByIdAndUpdate(connection._id, {
+                  reminded: true,
+                  remindTime: null
+                });
+                processedCount++;
+              } else {
+                failedCount++;
+              }
+            } catch (error) {
+              console.error(`Error processing reminder for ${connection.email}:`, error);
+              failedCount++;
+            }
+          })
+        )
+      );
+
+      skip += batchSize;
     }
 
   } catch (error) {
     console.error('Error in processReminders:', error);
     throw error;
   }
+
+  return { processedCount, failedCount };
 }
 
 export async function GET(request) {
-  // Verify the cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
-    // Connect to MongoDB
     await connectToDatabase();
 
-    console.log("Cron Job Started at:", new Date());
+    const startTime = new Date();
+    console.log("Cron Job Started at:", startTime);
     
-    // Process reminders
-    await processReminders();
+    const { processedCount, failedCount } = await processReminders();
     
-    console.log("Cron Job Completed at:", new Date());
+    const endTime = new Date();
+    const duration = endTime - startTime;
 
-    // Return detailed results
     return NextResponse.json({
       message: "Cron Job Completed",
-      timestamp: new Date()
+      startTime,
+      endTime,
+      duration: `${duration}ms`,
+      processedCount,
+      failedCount
     });
 
   } catch (error) {
