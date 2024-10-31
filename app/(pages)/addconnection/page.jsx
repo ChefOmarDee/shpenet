@@ -52,6 +52,7 @@ const QRCodeScanner = () => {
   const [cameras, setCameras] = useState([]);
   const [currentCamera, setCurrentCamera] = useState(null);
   const [hours, setHours] = useState("");
+  const [notes, setNotes] = useState(""); // New state for notes
   const [showHoursInput, setShowHoursInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -306,6 +307,7 @@ const QRCodeScanner = () => {
         body: JSON.stringify({
           qrCode: result,
           hours: parseInt(hours),
+          notes: notes.trim(), // Include notes, trimmed of whitespace
         }),
       });
 
@@ -408,6 +410,22 @@ const QRCodeScanner = () => {
                 disabled={isSubmitting}
               />
             </div>
+
+            {/* New notes input field */}
+            <div className="flex flex-col gap-2 mt-4">
+              <label htmlFor="notes" className="font-medium text-white">
+                Add Notes (Optional)
+              </label>
+              <textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="bg-lightteal-500 border border-orange-600/30 rounded-lg px-4 py-2 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[100px]"
+                placeholder="Enter any additional notes about this connection"
+                disabled={isSubmitting}
+              />
+            </div>
+
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
@@ -429,7 +447,7 @@ const QRCodeScanner = () => {
         )}
       </div>
     );
-  }, [result, startScanning, showHoursInput, hours, isSubmitting]);
+  }, [result, startScanning, showHoursInput, hours, notes, isSubmitting]);
 
   // Initialize component
   useEffect(() => {
@@ -448,7 +466,7 @@ const QRCodeScanner = () => {
       >
         <Home className="w-6 h-6" />
       </button>
-  
+
       {/* Logout Button */}
       <button
         onClick={() => setShowLogoutDialog(true)}
@@ -458,14 +476,14 @@ const QRCodeScanner = () => {
         <LogOut className="w-5 h-5" />
         <span>Logout</span>
       </button>
-  
+
       {/* Logout Confirmation Dialog */}
       <LogoutDialog
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}
         onConfirm={handleLogout}
       />
-  
+
       <div className="flex-grow flex flex-col justify-center items-center w-full px-4 py-12">
         <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
@@ -484,7 +502,7 @@ const QRCodeScanner = () => {
                 </p>
               )}
             </div>
-  
+
             <div className="space-y-4">
               {!showHoursInput && (
                 <div className="relative aspect-video bg-lightteal-800 rounded-lg overflow-hidden border border-orange-600/30">
@@ -510,21 +528,21 @@ const QRCodeScanner = () => {
                   )}
                 </div>
               )}
-  
+
               {CameraControls}
-  
+
               {error && (
                 <div className="p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700">
                   <p>{error}</p>
                 </div>
               )}
-  
+
               {ResultDisplay}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <Footer />
     </div>

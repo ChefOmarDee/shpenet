@@ -9,7 +9,7 @@ export const POST = withApiAuthRequired(async function addconnection(req) {
   const userEmail = await session.user.email;
   
   try {
-    const { qrCode, hours } = await req.json();
+    const { qrCode, hours, notes } = await req.json();
 
     // Validate the input
     if (!qrCode || !hours || Number(hours) % 1 !== 0) {
@@ -28,7 +28,8 @@ export const POST = withApiAuthRequired(async function addconnection(req) {
       linkedinUrl: cleanUrl,  // Add the LinkedIn URL to the data
       hours: hours,
       userID: userID,
-      userEmail: userEmail
+      userEmail: userEmail,
+      notes
     };
     console.log(connectionData)
     const newConnection = await addNewConnection(connectionData);

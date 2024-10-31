@@ -39,6 +39,10 @@ const connectionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    notes: {
+      type: String,
+      maxlength: 200,
+    },
     remindTime: {
       type: Date,
       required: true,

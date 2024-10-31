@@ -11,6 +11,9 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Function to send reminder email using SendGrid
 async function sendReminderEmail(connection) {
+  // Conditionally add notes section only if notes exist and are not an empty string
+  const notesSection = connection.notes ? `<li><strong>Notes:</strong> ${connection.notes}</li>` : '';
+
   const msg = {
     from: "shpenetuserhelp@gmail.com", // Your verified sender
     to: connection.email,
@@ -24,6 +27,7 @@ async function sendReminderEmail(connection) {
         <li><strong>Position:</strong> ${connection.position}</li>
         <li><strong>Company:</strong> ${connection.companyName}</li>
         <li><strong>Company URL:</strong> <a href="${connection.companyURL}">${connection.companyURL}</a></li>
+        ${notesSection}
       </ul>
       <p>Best regards,<br>Your Networking Assistant</p>
     `
@@ -39,7 +43,6 @@ async function sendReminderEmail(connection) {
     return false;
   }
 }
-
 // Process reminders function
 async function processReminders() {
   try {
