@@ -7,7 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, SwitchCamera, ExternalLink } from "lucide-react";
+import { Camera, SwitchCamera, ExternalLink, Home } from "lucide-react";
 import jsQR from "jsqr";
 
 const QRCodeScanner = () => {
@@ -399,9 +399,17 @@ const QRCodeScanner = () => {
       stopScanning();
     };
   }, [getCameras, stopScanning]);
-
   return (
     <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      {/* Home Button */}
+      <button
+        onClick={() => router.push("/")}
+        className="absolute top-4 left-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
+        aria-label="Back to Home"
+      >
+        <Home className="w-6 h-6" />
+      </button>
+
       <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
         <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
@@ -463,5 +471,4 @@ const QRCodeScanner = () => {
     </div>
   );
 };
-//added stuff
 export default QRCodeScanner;

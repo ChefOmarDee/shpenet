@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Trash2, FileText } from "lucide-react";
+import { Trash2, FileText, Home, Linkedin } from "lucide-react";
 
 export default function DocumentDetails({ params }) {
   const { documentId } = params;
@@ -14,7 +14,9 @@ export default function DocumentDetails({ params }) {
   useEffect(() => {
     async function fetchDocumentData() {
       try {
-        const response = await fetch(`/api/getdocumentdata?documentId=${documentId}`);
+        const response = await fetch(
+          `/api/getdocumentdata?documentId=${documentId}`
+        );
         if (!response.ok) throw new Error("Failed to fetch document data");
 
         const data = await response.json();
@@ -31,9 +33,12 @@ export default function DocumentDetails({ params }) {
 
   async function handleArchive() {
     try {
-      const response = await fetch(`/api/archiveconnection?documentId=${documentId}`, {
-        method: "GET"
-      });
+      const response = await fetch(
+        `/api/archiveconnection?documentId=${documentId}`,
+        {
+          method: "GET",
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to archive document");
       alert("Document archived successfully.");
@@ -46,9 +51,12 @@ export default function DocumentDetails({ params }) {
 
   async function handleDelete() {
     try {
-      const response = await fetch(`/api/deleteconnection?documentId=${documentId}`, {
-        method: "GET"
-      });
+      const response = await fetch(
+        `/api/deleteconnection?documentId=${documentId}`,
+        {
+          method: "GET",
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to delete document");
 
@@ -64,16 +72,21 @@ export default function DocumentDetails({ params }) {
     const now = new Date();
     const timeDifference = new Date(remindTime) - now;
 
-    if (timeDifference <= 0) return 'Remind time has passed';
+    if (timeDifference <= 0) return "Remind time has passed";
 
     const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+    const hours = Math.floor(
+      (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
+    const minutes = Math.floor(
+      (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+    );
 
-    let result = '';
-    if (days > 0) result += `${days} day${days > 1 ? 's' : ''} `;
-    if (hours > 0) result += `${hours} hour${hours > 1 ? 's' : ''} `;
-    if (minutes > 0 || result === '') result += `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    let result = "";
+    if (days > 0) result += `${days} day${days > 1 ? "s" : ""} `;
+    if (hours > 0) result += `${hours} hour${hours > 1 ? "s" : ""} `;
+    if (minutes > 0 || result === "")
+      result += `${minutes} minute${minutes !== 1 ? "s" : ""}`;
 
     return result.trim();
   }
@@ -83,16 +96,39 @@ export default function DocumentDetails({ params }) {
   }
 
   if (!document) {
-    return <h1 className="text-center text-2xl text-orange-400">Document not found or invalid ID</h1>;
+    return (
+      <h1 className="text-center text-2xl text-orange-400">
+        Document not found or invalid ID
+      </h1>
+    );
   }
 
-  const { firstName, lastName, position, companyName, companyURL, profilePicture, createdAt, remindTime, reminded } = document;
+  const {
+    firstName,
+    lastName,
+    position,
+    companyName,
+    companyURL,
+    linkedinUrl,
+    profilePicture,
+    createdAt,
+    remindTime,
+    reminded,
+  } = document;
   const timeUntilRemind = calculateTimeUntilRemind(remindTime);
 
   return (
     <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col items-center justify-center p-6">
+      {/* Home Button */}
+      <button
+        onClick={() => router.push("/")}
+        className="absolute top-4 left-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
+        aria-label="Back to Home"
+      >
+        <Home className="w-6 h-6" />
+      </button>
+
       <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-orange-600">
-        
         {profilePicture && (
           <img
             src={profilePicture}
@@ -101,20 +137,36 @@ export default function DocumentDetails({ params }) {
           />
         )}
 
-        <h1 className="text-2xl font-semibold text-orange-400">{firstName} {lastName}</h1>
+        <h1 className="text-2xl font-semibold text-orange-400">
+          {firstName} {lastName}
+        </h1>
         <p className="text-lg text-gray-300 mt-2">{position}</p>
 
-        <p className="mt-4 text-gray-300">
-          Works at: 
-          <a 
-            href={companyURL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-orange-400 font-semibold hover:text-orange-300 inline-flex items-center gap-1 transition-colors"
-          >
-            {companyName}
-          </a>
-        </p>
+        <div className="flex flex-col items-center gap-2 mt-4">
+          <p className="text-gray-300">
+            Works at:
+            <a
+              href={companyURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-400 font-semibold hover:text-orange-300 ml-1 inline-flex items-center gap-1 transition-colors"
+            >
+              {companyName}
+            </a>
+          </p>
+
+          {linkedinUrl && (
+            <a
+              href={linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2 transition-colors"
+            >
+              <Linkedin className="w-5 h-5" />
+              LinkedIn Profile
+            </a>
+          )}
+        </div>
 
         {createdAt && (
           <p className="mt-4 text-gray-400 text-sm">
@@ -142,13 +194,13 @@ export default function DocumentDetails({ params }) {
 
       {/* Archive and Delete Buttons */}
       <div className="flex justify-center gap-4 mt-6">
-      <button
+        <button
           onClick={handleArchive}
-          disabled={reminded}  // Disables button if reminded is true
+          disabled={reminded}
           className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${
             reminded
-              ? "bg-gray-400 text-gray-200 cursor-not-allowed"  // Disabled state styling
-              : "bg-orange-500 text-white hover:bg-orange-600"  // Active state styling
+              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+              : "bg-orange-500 text-white hover:bg-orange-600"
           }`}
         >
           <FileText className="w-5 h-5" />
@@ -157,8 +209,9 @@ export default function DocumentDetails({ params }) {
 
         <button
           onClick={() => setShowDeletePrompt(true)}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors flex items-center gap-1"
         >
+          <Trash2 className="w-5 h-5" />
           Delete Connection
         </button>
       </div>
@@ -167,7 +220,9 @@ export default function DocumentDetails({ params }) {
       {showDeletePrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-lightteal-800 p-6 rounded-md text-center max-w-sm w-full border border-orange-600">
-            <p className="text-white mb-4">Are you sure you want to delete this connection?</p>
+            <p className="text-white mb-4">
+              Are you sure you want to delete this connection?
+            </p>
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleDelete}
