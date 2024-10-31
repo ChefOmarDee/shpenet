@@ -2,7 +2,41 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Trash2, FileText, Home, Linkedin } from "lucide-react";
+import { Trash2, FileText, Home, Linkedin, LogOut } from "lucide-react";
+
+// Logout Dialog Component
+const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Dialog */}
+      <div className="relative z-10 bg-lightteal-800 border border-orange-600 rounded-lg p-6 w-full max-w-md mx-4">
+        <h2 className="text-xl font-bold text-white mb-2">Confirm Logout</h2>
+        <p className="text-gray-300 mb-6">
+          Are you sure you want to logout? Any unsaved progress will be lost.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-lightteal-500 text-white rounded-lg hover:bg-lightteal-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function DocumentDetails({ params }) {
   const { documentId } = params;
@@ -10,6 +44,7 @@ export default function DocumentDetails({ params }) {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   useEffect(() => {
     async function fetchDocumentData() {
@@ -67,6 +102,10 @@ export default function DocumentDetails({ params }) {
       alert("Error deleting document. Please try again.");
     }
   }
+
+  const handleLogout = () => {
+    window.location.href = "/api/auth/logout";
+  };
 
   function calculateTimeUntilRemind(remindTime) {
     const now = new Date();
@@ -127,6 +166,23 @@ export default function DocumentDetails({ params }) {
       >
         <Home className="w-6 h-6" />
       </button>
+
+      {/* Updated Logout Button */}
+      <button
+        onClick={() => setShowLogoutDialog(true)}
+        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        aria-label="Logout"
+      >
+        <LogOut className="w-5 h-5" />
+        <span>Logout</span>
+      </button>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+      />
 
       <div className="relative bg-lightteal-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-orange-600">
         {profilePicture && (

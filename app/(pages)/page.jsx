@@ -1,9 +1,43 @@
-// Previous imports and components remain the same...
 "use client";
 import React, { useState, useEffect } from "react";
-import { Clock, Building2, UserPlus } from "lucide-react";
+import { Clock, Building2, UserPlus, LogOut } from "lucide-react";
 import Link from "next/link";
 
+// Logout Dialog Component
+const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Dialog */}
+      <div className="relative z-10 bg-lightteal-800 border border-orange-600 rounded-lg p-6 w-full max-w-md mx-4">
+        <h2 className="text-xl font-bold text-white mb-2">Confirm Logout</h2>
+        <p className="text-gray-300 mb-6">
+          Are you sure you want to logout? Any unsaved progress will be lost.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-lightteal-500 text-white rounded-lg hover:bg-lightteal-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Previous component definitions (TabsContainer, TabsList, etc.) remain the same...
 const TabsContainer = ({ children, className = "" }) => (
   <div className={`w-full ${className}`}>{children}</div>
 );
@@ -168,7 +202,12 @@ const RemindersDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const itemsPerPage = 5;
+
+  const handleLogout = () => {
+    window.location.href = "/api/auth/logout";
+  };
 
   const fetchReminders = async () => {
     try {
@@ -233,6 +272,23 @@ const RemindersDashboard = () => {
 
   return (
     <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      {/* Logout Button */}
+      <button
+        onClick={() => setShowLogoutDialog(true)}
+        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        aria-label="Logout"
+      >
+        <LogOut className="w-5 h-5" />
+        <span>Logout</span>
+      </button>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+      />
+
       <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
         <div className="w-full max-w-6xl mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
