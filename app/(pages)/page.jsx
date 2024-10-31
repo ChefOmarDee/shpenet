@@ -51,7 +51,7 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
       <thead>
         <tr>
           <th className="p-2 text-center text-orange-400 border-b border-r border-black">
-            Profile
+            LinkedIn Profile
           </th>
           <th className="p-2 text-center text-orange-400 border-b border-r border-black">
             Name
@@ -66,7 +66,7 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
             Time Until
           </th>
           <th className="p-2 text-center text-orange-400 border-b border-black">
-            Actions
+            Details
           </th>
         </tr>
       </thead>

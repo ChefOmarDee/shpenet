@@ -110,12 +110,12 @@ export default function DocumentDetails({ params }) {
           <p className="text-lg text-gray-300 mt-2">{position}</p>
 
           <p className="mt-4 text-gray-300">
-            Works at: 
+            Works at:
             <a 
               href={companyURL} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-orange-400 font-semibold hover:text-orange-300 inline-flex items-center gap-1 transition-colors"
+              className="ml-1 text-orange-400 font-semibold hover:text-orange-300 inline-flex items-center gap-1 transition-colors"
             >
               {companyName}
             </a>
