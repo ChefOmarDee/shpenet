@@ -452,82 +452,27 @@ const QRCodeScanner = () => {
       {/* Logout Button */}
       <button
         onClick={() => setShowLogoutDialog(true)}
-        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        className="absolute top-4 right-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
         aria-label="Logout"
       >
-        <LogOut className="w-5 h-5" />
-        <span>Logout</span>
+        <LogOut className="w-6 h-6" />
       </button>
 
-      {/* Logout Confirmation Dialog */}
+      {/* Main Content */}
+      <div className="flex flex-col items-center justify-center h-full">
+        <video ref={videoRef} className="w-64 h-48 bg-black rounded-lg" />
+        <canvas ref={canvasRef} className="hidden" />
+
+        {CameraControls}
+        {ResultDisplay}
+      </div>
+
+      {/* Logout Dialog */}
       <LogoutDialog
         isOpen={showLogoutDialog}
         onClose={() => setShowLogoutDialog(false)}
         onConfirm={handleLogout}
       />
-      <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
-
-        <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Camera className="w-6 h-6 text-orange-500" />
-                <h2 className="text-xl font-bold text-orange-500">
-                  {showHoursInput
-                    ? "Input Hours Until Reminder"
-                    : "LinkedIn QR Scanner"}
-                </h2>
-              </div>
-              {currentCamera && !showHoursInput && (
-                <p className="text-sm text-orange-400">
-                  Using: {currentCamera.label.split("(")[0].trim()}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              {/* Camera Preview */}
-              {!showHoursInput && (
-                <div className="relative aspect-video bg-lightteal-800 rounded-lg overflow-hidden border border-orange-600/30">
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    autoPlay
-                    playsInline
-                    muted
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
-                  {!isScanning && !result && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-navy-900/50">
-                      <p className="text-orange-400">
-                        Camera preview will appear here
-                      </p>
-                    </div>
-                  )}
-                  {isScanning && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-48 h-48 border-2 border-orange-500 rounded-lg"></div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Camera Controls */}
-              {CameraControls}
-
-              {/* Error Display */}
-              {error && (
-                <div className="p-4 bg-red-900/50 text-red-200 rounded-lg border border-red-700">
-                  <p>{error}</p>
-                </div>
-              )}
-
-              {/* Result Display */}
-              {ResultDisplay}
-            </div>
-          </div>
-        </div>
-      </main>
 
       {/* Footer Component */}
       <Footer />

@@ -47,10 +47,11 @@ export default function DocumentDetails({ params }) {
   const [showDeletePrompt, setShowDeletePrompt] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-
   async function fetchDocumentData() {
     try {
-      const response = await fetch(`/api/getdocumentdata?documentId=${documentId}`);
+      const response = await fetch(
+        `/api/getdocumentdata?documentId=${documentId}`
+      );
       if (!response.ok) throw new Error("Failed to fetch document data");
 
       const data = await response.json();
@@ -76,10 +77,9 @@ export default function DocumentDetails({ params }) {
       );
 
       if (!response.ok) throw new Error("Failed to archive document");
-      
+
       alert("Document archived successfully.");
-      
-      // Re-fetch data to update component state instead of refreshing the page
+
       await fetchDocumentData();
     } catch (error) {
       console.error("Error archiving document:", error);
@@ -231,45 +231,20 @@ export default function DocumentDetails({ params }) {
           <p className="mt-4 text-gray-400 text-sm">
             Created on: {new Date(createdAt).toLocaleString()}
           </p>
+        )}
 
-          {createdAt && (
-            <p className="mt-4 text-gray-400 text-sm">
-              Created on: {new Date(createdAt).toLocaleString()}
-            </p>
-          )}
+        {remindTime && (
+          <p className="mt-2 text-gray-400 text-sm">
+            Reminder in: {timeUntilRemind}
+          </p>
+        )}
 
-          {remindTime && (
-            <p className="mt-2 text-gray-400 text-sm">
-              Reminder in: {timeUntilRemind}
-            </p>
-          )}
-          {reminded && (
-            <p className="mt-2 text-gray-400 text-sm">
-              Reminder in: {timeUntilRemind}
-            </p>
-          )}
-
-          {reminded ? (
-            <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
-          ) : (
-            <p className="mt-2 text-green-500 text-sm">This item is active</p>
-          )}
-        </div>
-
-        {/* Archive and Delete Buttons */}
-        <div className="flex justify-center gap-4 mt-6">
-          <button
-            onClick={handleArchive}
-            disabled={reminded}
-            className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${
-              reminded
-                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                : "bg-orange-500 text-white hover:bg-orange-600"
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            Archive
-          </button>
+        {reminded ? (
+          <p className="mt-2 text-orange-500 text-sm">This item is archived</p>
+        ) : (
+          <p className="mt-2 text-green-500 text-sm">This item is active</p>
+        )}
+      </div>
 
       {/* Archive and Delete Buttons */}
       <div className="flex justify-center gap-4 mt-6">
@@ -285,43 +260,49 @@ export default function DocumentDetails({ params }) {
           <FileText className="w-5 h-5" />
           Archive
         </button>
-
         <button
           onClick={() => setShowDeletePrompt(true)}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors flex items-center gap-1"
+          className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-1 hover:bg-red-700 transition-colors"
         >
           <Trash2 className="w-5 h-5" />
-          Delete Connection
+          Delete
         </button>
-
       </div>
 
-      {/* Delete Confirmation Prompt */}
+      {/* Delete Confirmation Dialog */}
       {showDeletePrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-lightteal-800 p-6 rounded-md text-center max-w-sm w-full border border-orange-600">
-            <p className="text-white mb-4">
-              Are you sure you want to delete this connection?
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDeletePrompt(false)}
+          />
+
+          {/* Dialog */}
+          <div className="relative z-10 bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold mb-2">Confirm Delete</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this document? This action cannot
+              be undone.
             </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={handleDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-              >
-                Confirm
-              </button>
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeletePrompt(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Footer Component */}
       <Footer />
     </div>
   );
