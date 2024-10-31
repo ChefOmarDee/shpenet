@@ -8,8 +8,42 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, SwitchCamera, ExternalLink } from "lucide-react";
+import { Camera, SwitchCamera, ExternalLink, Home, LogOut } from "lucide-react";
 import jsQR from "jsqr";
+
+// Logout Dialog Component
+const LogoutDialog = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Dialog */}
+      <div className="relative z-10 bg-lightteal-800 border border-orange-600 rounded-lg p-6 w-full max-w-md mx-4">
+        <h2 className="text-xl font-bold text-white mb-2">Confirm Logout</h2>
+        <p className="text-gray-300 mb-6">
+          Are you sure you want to logout? Any unsaved progress will be lost.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-lightteal-500 text-white rounded-lg hover:bg-lightteal-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const QRCodeScanner = () => {
   const [result, setResult] = useState("");
@@ -20,6 +54,7 @@ const QRCodeScanner = () => {
   const [hours, setHours] = useState("");
   const [showHoursInput, setShowHoursInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -27,6 +62,9 @@ const QRCodeScanner = () => {
   const processingRef = useRef(false);
   const frameCountRef = useRef(0);
   const router = useRouter();
+  const handleLogout = () => {
+    window.location.href = "/api/auth/logout";
+  };
 
   // Error handling utility
   const handleCameraError = (error) => {
@@ -400,11 +438,35 @@ const QRCodeScanner = () => {
       stopScanning();
     };
   }, [getCameras, stopScanning]);
-
-
   return (
-    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500 flex flex-col">
-      <main className="flex-grow flex flex-col justify-center w-full px-4 py-12">
+    <div className="min-h-screen w-full bg-lightteal-500 bg-gradient-to-b from-lightteal-500 to-lightteal-500">
+      {/* Home Button */}
+      <button
+        onClick={() => router.push("/")}
+        className="absolute top-4 left-4 bg-orange-500 text-white p-5 rounded-full hover:bg-orange-600 transition-colors"
+        aria-label="Back to Home"
+      >
+        <Home className="w-6 h-6" />
+      </button>
+
+      {/* Logout Button */}
+      <button
+        onClick={() => setShowLogoutDialog(true)}
+        className="absolute top-4 right-4 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+        aria-label="Logout"
+      >
+        <LogOut className="w-5 h-5" />
+        <span>Logout</span>
+      </button>
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+      />
+      <div className="flex flex-col justify-center min-h-screen w-full px-4 py-12">
+
         <div className="w-full max-w-md mx-auto rounded-lg border border-orange-600 shadow-lg overflow-hidden bg-lightteal-800">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -472,5 +534,4 @@ const QRCodeScanner = () => {
     </div>
   );
 };
-//added stuff
 export default QRCodeScanner;
