@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Connection } from "@/app/_lib/mongo/models/connection";
 import { connectToDatabase } from "@/app/_lib/mongo/connection/connection";
-import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 import path from "path";
 import pLimit from 'p-limit';
 
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-
-// Configure SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Create a rate limiter - limit to 5 concurrent operations
 const limit = pLimit(5);
@@ -29,40 +25,67 @@ async function withRetry(operation, maxRetries = 3) {
 
 async function sendReminderEmail(connection) {
   const notesSection = connection.notes ? `<li><strong>Notes:</strong> ${connection.notes}</li>` : '';
-
-  const msg = {
-    from: "shpenetuserhelp@gmail.com",
-    to: connection.email,
-    subject: `Reminder: Connection with ${connection.firstName} ${connection.lastName}`,
-    html: `
-      <h2>Connection Reminder</h2>
-      <p>Hello! This is a reminder about your connection with:</p>
-      <ul>
-        <li><strong>Name:</strong> ${connection.firstName} ${connection.lastName}</li>
-        <li><strong>LinkedinURL:</strong> <a href="${connection.linkedinUrl}">${connection.linkedinUrl}</a></li>
-        <li><strong>Position:</strong> ${connection.position}</li>
-        <li><strong>Company:</strong> ${connection.companyName}</li>
-        <li><strong>Company URL:</strong> <a href="${connection.companyURL}">${connection.companyURL}</a></li>
-        ${notesSection}
-      </ul>
-      <p>Best regards,<br>Your Networking Assistant</p>
-    `
+  
+  const emailData = {
+    personalizations: [{
+      to: [{
+        email: connection.email,
+        name: `${connection.firstName} ${connection.lastName}`
+      }],
+      subject: `Reminder: Connection with ${connection.firstName} ${connection.lastName}`
+    }],
+    from: {
+      email: "shpenetuserhelp@gmail.com",
+      name: "Your Networking Assistant"
+    },
+    reply_to: {
+      email: "shpenetuserhelp@gmail.com",
+      name: "Your Networking Assistant"
+    },
+    content: [{
+      type: "text/html",
+      value: `
+        <h2>Connection Reminder</h2>
+        <p>Hello! This is a reminder about your connection with:</p>
+        <ul>
+          <li><strong>Name:</strong> ${connection.firstName} ${connection.lastName}</li>
+          <li><strong>LinkedinURL:</strong> <a href="${connection.linkedinUrl}">${connection.linkedinUrl}</a></li>
+          <li><strong>Position:</strong> ${connection.position}</li>
+          <li><strong>Company:</strong> ${connection.companyName}</li>
+          <li><strong>Company URL:</strong> <a href="${connection.companyURL}">${connection.companyURL}</a></li>
+          ${notesSection}
+        </ul>
+        <p>Best regards,<br>Your Networking Assistant</p>
+      `
+    }]
   };
 
   return withRetry(async () => {
     try {
-      await sgMail.send(msg);
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('SendGrid API error:', errorData);
+        
+        // Check for permanent rejection
+        if (errorData.errors?.some(e => e.message.includes('permanently rejected'))) {
+          return false;
+        }
+        throw new Error(`SendGrid API error: ${response.status}`);
+      }
+
       console.log(`Reminder email sent to ${connection.email}`);
       return true;
     } catch (error) {
-      if (error.response?.body?.errors) {
-        // Log specific SendGrid errors
-        console.error('SendGrid errors:', error.response.body.errors);
-        // Don't retry for permanent errors
-        if (error.response.body.errors.some(e => e.message.includes('permanently rejected'))) {
-          return false;
-        }
-      }
+      console.error(`Error sending email to ${connection.email}:`, error);
       throw error; // Re-throw for retry
     }
   });
@@ -160,6 +183,5 @@ export async function GET(request) {
     );
   }
 }
+
 export const dynamic = "force-dynamic";
-
-
