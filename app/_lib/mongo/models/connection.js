@@ -21,23 +21,23 @@ const connectionSchema = new mongoose.Schema(
     },
     firstName: {
       type: String,
-      required: true,
+      required: false,
     },
     lastName: {
       type: String,
-      required: true,
+      required: false,
     },
     position: {
       type: String,
-      required: true,
+      required: false,
     },
     companyName: {
       type: String,
-      required: true,
+      required: false,
     },
     companyURL: {
       type: String,
-      required: true,
+      required: false,
     },
     notes: {
       type: String,

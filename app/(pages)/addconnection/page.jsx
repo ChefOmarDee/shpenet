@@ -156,13 +156,13 @@ const QRCodeScanner = () => {
   const processFrame = useCallback(() => {
     if (!isScanning || processingRef.current) return;
     if (!videoRef.current || !canvasRef.current) return;
-
+  
     frameCountRef.current += 1;
     if (frameCountRef.current % 2 !== 0) {
       requestAnimationFrame(processFrame);
       return;
     }
-
+  
     try {
       processingRef.current = true;
       const canvas = canvasRef.current;
@@ -171,13 +171,13 @@ const QRCodeScanner = () => {
         willReadFrequently: true,
         alpha: false,
       });
-
+  
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.width = 640;
         canvas.height = 480;
         context.imageSmoothingEnabled = false;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+  
         const rawImageData = context.getImageData(
           0,
           0,
@@ -185,14 +185,14 @@ const QRCodeScanner = () => {
           canvas.height
         );
         const processedImageData = processImage(rawImageData);
-
+  
         let code = null;
         const attempts = [
           { inversionAttempts: "dontInvert" },
           { inversionAttempts: "onlyInvert" },
           { inversionAttempts: "attemptBoth" },
         ];
-
+  
         for (const settings of attempts) {
           code = jsQR(
             processedImageData.data,
@@ -203,11 +203,11 @@ const QRCodeScanner = () => {
 
           if (code) break;
         }
-
+  
         if (code && code.data && code.data.trim().length > 0) {
           setResult(code.data);
-          setShowHoursInput(true);
-          stopScanning();
+            setShowHoursInput(true);
+            stopScanning();
           return;
         }
       }
@@ -323,7 +323,14 @@ const QRCodeScanner = () => {
       alert("Please enter a valid number of hours");
       return;
     }
-
+  
+    // Log the payload data for debugging
+    console.log("Payload:", {
+      qrCode: result,
+      hours: parseInt(hours),
+      notes: notes.trim(),
+    });
+  
     try {
       setIsSubmitting(true);
       const response = await fetch("/api/addconnection", {
@@ -337,13 +344,16 @@ const QRCodeScanner = () => {
           notes: notes.trim(),
         }),
       });
-
+  
       const data = await response.json();
-
+  
+      // Log the server's response to see if there's additional error information
+      console.log("Server Response:", data);
+  
       if (!response.ok) {
         throw new Error(data.error || "Failed to set reminder");
       }
-
+  
       alert("Reminder set successfully!");
       router.push("/");
     } catch (error) {

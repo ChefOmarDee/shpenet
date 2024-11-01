@@ -112,6 +112,7 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
             }
             className="border-b border-black hover:bg-lightteal-700/50 transition-colors"
           >
+            {/* LinkedIn Profile Column */}
             <td className="p-2 border-r border-black text-center">
               {reminder.linkedinUrl ? (
                 <a
@@ -120,19 +121,21 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
                   rel="noopener noreferrer"
                 >
                   <img
-                    src={reminder.profilePicture}
-                    alt={`${reminder.firstName} ${reminder.lastName}`}
+                    src={reminder.profilePicture || "/default-profile.png"} // Default profile picture
+                    alt={`${reminder.firstName || "Unknown"} ${reminder.lastName || "User"}`} // Default name
                     className="w-8 h-8 rounded-full mx-auto cursor-pointer hover:opacity-80 transition-opacity"
                   />
                 </a>
               ) : (
                 <img
-                  src={reminder.profilePicture}
-                  alt={`${reminder.firstName} ${reminder.lastName}`}
+                  src={reminder.profilePicture || "/default-profile.png"} // Default profile picture
+                  alt={`${reminder.firstName || "Unknown"} ${reminder.lastName || "User"}`} // Default name
                   className="w-8 h-8 rounded-full mx-auto"
                 />
               )}
             </td>
+
+            {/* Name Column */}
             <td className="p-2 border-r border-black text-center">
               {reminder.linkedinUrl ? (
                 <a
@@ -141,34 +144,42 @@ const ReminderTable = ({ reminders, getTimeUntil, activeTab }) => (
                   rel="noopener noreferrer"
                   className="text-white hover:text-orange-300 transition-colors"
                 >
-                  {reminder.firstName} {reminder.lastName}
+                  {reminder.firstName || "Unknown"} {reminder.lastName || "User"}
                 </a>
               ) : (
                 <span className="text-white">
-                  {reminder.firstName} {reminder.lastName}
+                  {reminder.firstName || "Unknown"} {reminder.lastName || "User"}
                 </span>
               )}
             </td>
+
+            {/* Position Column */}
             <td className="p-2 border-r border-black text-center text-gray-300 hidden lg:table-cell">
-              {reminder.position}
+              {reminder.position || "No position"}
             </td>
+
+            {/* Company Column */}
             <td className="p-2 border-r border-black text-center hidden md:table-cell">
               <a
-                href={reminder.companyURL}
+                href={reminder.companyURL || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-orange-400 hover:text-orange-300 inline-flex items-center gap-1 transition-colors justify-center"
               >
                 <Building2 className="w-4 h-4" />
-                <span>{reminder.companyName}</span>
+                <span>{reminder.companyName || "No company"}</span>
               </a>
             </td>
+
+            {/* Time Until Column */}
             <td className="p-2 text-center border-r border-black hidden lg:table-cell">
               <div className="flex items-center gap-1 text-gray-300 justify-center">
                 <Clock className="w-4 h-4" />
-                <span>{getTimeUntil(reminder.remindTime, activeTab)}</span>
+                <span>{getTimeUntil(reminder.remindTime, activeTab) || "No reminder set"}</span>
               </div>
             </td>
+
+            {/* Details Button */}
             <td className="p-2 text-center">
               <Link href={`/details/${reminder._id}`}>
                 <button className="bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition-colors">
